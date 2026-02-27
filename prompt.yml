@@ -1,0 +1,908 @@
+# ============================================================
+# TALON™ POS SYSTEM — CONSOLIDATED BUILD PROMPT
+# ============================================================
+# Single source of truth for building Talon™.
+# AI agents: follow this file. Check items done as completed.
+# Brand styling: see brand_identity section below — this file is the complete spec.
+# ============================================================
+
+project:
+  name: "Talon™"
+  tagline: "Strike fast. Track everything."
+  type: "Multi-platform POS system"
+  description: >
+    Talon™ is an offline-first, multi-store point-of-sale system built with
+    Flutter and Supabase. It supports mobile, web, and desktop from a single
+    codebase with a backend-agnostic architecture designed for future migration
+    to any backend (Go, Java, etc.) without rewriting business logic or UI.
+
+# ============================================================
+# ARCHITECTURE DECISIONS
+# ============================================================
+# Concise. What + Why. No fluff.
+# ============================================================
+
+architecture:
+  pattern: "Clean Architecture (3-layer)"
+  why: >
+    Enforces separation of concerns. The domain layer has zero external
+    dependencies, making the entire business logic portable. The data layer
+    can be swapped (Supabase today, Go/Java API tomorrow) by changing
+    one DI registration per repository. UI never touches infrastructure.
+
+  layers:
+    presentation:
+      responsibility: "UI, Blocs/Cubits, screens, widgets"
+      depends_on: "Domain only"
+      rules:
+        - "Never import data layer packages directly"
+        - "Interact with domain through Blocs/Cubits"
+        - "Blocs call use cases or repository interfaces"
+
+    domain:
+      responsibility: "Entities, repository contracts, use cases, value objects"
+      depends_on: "Nothing"
+      rules:
+        - "Pure Dart — no Flutter, no Supabase, no HTTP imports"
+        - "Defines abstract repository interfaces (contracts)"
+        - "Contains business rules and validation logic"
+        - "This layer is the same regardless of backend"
+
+    data:
+      responsibility: "Repository implementations, DTOs, remote/local data sources"
+      depends_on: "Domain contracts"
+      rules:
+        - "Implements domain repository interfaces"
+        - "Handles Supabase calls, local DB, sync logic"
+        - "DTOs convert between external formats and domain entities"
+        - "Swappable — this is what changes when switching backends"
+
+  backend_swap_pattern: |
+    # Domain layer — pure Dart, no backend imports
+    abstract class ProductRepository {
+      Future<List<Product>> getProducts(String storeId);
+      Future<Product> createProduct(Product product);
+    }
+
+    # Data layer — current implementation (Supabase)
+    class SupabaseProductRepository implements ProductRepository { ... }
+
+    # Data layer — future swap (Go API)
+    class GoApiProductRepository implements ProductRepository { ... }
+
+    # DI registration — ONE line changes to swap backend
+    getIt.registerLazySingleton<ProductRepository>(
+      () => SupabaseProductRepository(),  // swap this line
+    );
+
+  dependency_injection:
+    tool: "get_it + injectable"
+    why: "Compile-safe DI, auto-registration, easy backend swaps"
+
+  state_management:
+    tool: "Bloc/Cubit"
+    why: >
+      Explicit state transitions for offline queue management.
+      Stream-based (pairs with Supabase Realtime). Highly testable.
+      Scales for cross-feature state dependencies.
+
+# ============================================================
+# TECH STACK
+# ============================================================
+
+tech_stack:
+  frontend: "Flutter (mobile, web, desktop)"
+  backend: "Supabase (PostgreSQL + Realtime + Auth + RLS + Edge Functions)"
+  local_db: "Drift (SQLite) — type-safe, mirrors Postgres schema, migrations"
+  state: "flutter_bloc / Cubit"
+  di: "get_it + injectable"
+  fonts: "google_fonts (Montserrat, Inter, JetBrains Mono)"
+  networking: "supabase_flutter (current), swappable via repository pattern"
+  testing: "bloc_test, mocktail, integration_test"
+
+# ============================================================
+# DATA ARCHITECTURE
+# ============================================================
+
+data_architecture:
+  storage:
+    cloud:
+      tech: "Supabase PostgreSQL"
+      role: "Source of truth, multi-store sync, RLS enforcement"
+    local:
+      tech: "Drift (SQLite)"
+      role: "Offline-first local queries, cache, fast reads"
+    sync_queue:
+      tech: "Drift table (sync_queue)"
+      role: "Stores pending mutations when offline"
+
+  sync_strategy:
+    online:
+      write: "Local DB + sync_queue → push to Supabase → confirm → dequeue"
+      read: "Supabase Realtime subscription → update local DB → UI refreshes"
+    offline:
+      write: "Local DB + sync_queue (queued, pending)"
+      read: "Local DB only"
+    reconnection: "Drain sync_queue FIFO → pull latest server state → reconcile"
+
+  sync_queue_schema:
+    table: "sync_queue"
+    fields:
+      - "id: auto-increment primary key"
+      - "entity_type: string (product, transaction, inventory, etc.)"
+      - "entity_id: string (UUID of the affected record)"
+      - "action: enum (create, update, delete)"
+      - "payload: JSON (full entity snapshot)"
+      - "created_at: timestamp (ordering)"
+      - "retry_count: int (default 0)"
+      - "status: enum (pending, processing, failed)"
+    processing:
+      order: "FIFO by created_at"
+      retry: "Exponential backoff (2s, 4s, 8s, 16s, max 60s)"
+      max_retries: 5
+      on_max_retries: "Mark failed, surface to admin for manual review"
+
+  conflict_resolution:
+    sales_transactions:
+      strategy: "No conflict — append-only"
+      reason: "A sale is a fact. Never overwritten."
+    inventory_quantities:
+      strategy: "Server-reconciled deltas"
+      reason: >
+        Store A sells 2, Store B sells 1 — server applies both deltas.
+        Only manual stock adjustments use timestamp-based last-write-wins.
+    product_catalog:
+      strategy: "Last-write-wins (timestamp)"
+      reason: "Low contention — usually one manager edits."
+    settings:
+      strategy: "Last-write-wins (timestamp)"
+      reason: "Admin authority."
+
+  database_schema_overview:
+    auth: "stores, users, roles, permissions"
+    catalog: "products, product_variants, categories"
+    inventory: "inventory (store_id, product_id, qty)"
+    sales: "transactions, transaction_items (immutable)"
+    sync: "sync_queue"
+    notes:
+      - "All tables include store_id for multi-tenancy"
+      - "Supabase RLS policies enforce store-level access"
+      - "Local Drift DB mirrors this schema"
+      - "Detailed schema will be defined before implementation"
+
+# ============================================================
+# PROJECT STRUCTURE
+# ============================================================
+
+project_structure: |
+  lib/
+  ├── core/
+  │   ├── di/                          # Dependency injection setup
+  │   │   └── injection.dart
+  │   ├── theme/
+  │   │   ├── app_theme.dart           # All 6 themes (3 themes × light/dark)
+  │   │   ├── theme_provider.dart      # Theme switching logic (Cubit)
+  │   │   └── theme_extensions.dart
+  │   ├── constants/
+  │   │   ├── app_spacing.dart         # 16px/24px base increments
+  │   │   └── app_strings.dart         # Brand voice copy by theme
+  │   ├── network/
+  │   │   └── sync_engine.dart         # Queue processing, reconnection
+  │   └── error/
+  │       └── failures.dart            # Domain-level failure types
+  ├── domain/
+  │   ├── entities/                    # Pure Dart models (no dependencies)
+  │   ├── repositories/                # Abstract contracts (interfaces)
+  │   └── usecases/                    # Business logic operations
+  ├── data/
+  │   ├── datasources/
+  │   │   ├── remote/                  # Supabase implementations
+  │   │   └── local/                   # Drift (SQLite) implementations
+  │   ├── repositories/                # Implements domain contracts
+  │   ├── models/                      # DTOs (to/from JSON, DB rows)
+  │   └── drift/                       # Drift database definition, DAOs
+  ├── presentation/
+  │   ├── common/                      # Shared widgets (buttons, cards, inputs, alerts)
+  │   ├── pos/                         # POS terminal feature
+  │   │   ├── bloc/
+  │   │   ├── screens/
+  │   │   └── widgets/
+  │   ├── inventory/                   # Inventory management
+  │   ├── reports/                     # Analytics dashboard
+  │   ├── customers/                   # CRM
+  │   ├── settings/                    # Theme selector, store config
+  │   └── auth/                        # Login, role selection
+  ├── landing/                         # Marketing landing page + one-pager
+  │   ├── screens/
+  │   └── widgets/
+  └── main.dart
+
+# ============================================================
+# RESPONSIVENESS & ACCESSIBILITY
+# ============================================================
+# Built in from the ground up. Not an afterthought.
+# One codebase → mobile, tablet, desktop, web.
+# 3 themes × light/dark = 6 variations, all must be accessible.
+# ============================================================
+
+responsiveness:
+  approach: "Responsive layout system using LayoutBuilder + breakpoints"
+  breakpoints:
+    mobile: "< 600px"
+    tablet: "600px – 1024px"
+    desktop: "> 1024px"
+  rules:
+    - "Every screen must define mobile, tablet, and desktop layouts"
+    - "Use LayoutBuilder or MediaQuery — never hardcode widths"
+    - "Navigation: bottom nav (mobile), rail (tablet), side drawer (desktop)"
+    - "POS terminal: single column (mobile), split panel cart+products (tablet/desktop)"
+    - "Data tables: cards/list view (mobile), full table (tablet/desktop)"
+    - "Dialogs: fullscreen (mobile), centered modal (tablet/desktop)"
+    - "Font sizes: use mobile typography scale on small screens, desktop scale on large"
+    - "Touch targets: minimum 48×48px on all platforms"
+  implementation:
+    - "Create a ResponsiveBuilder widget that takes mobile/tablet/desktop builders"
+    - "Create responsive breakpoint constants in core/constants/"
+    - "All common widgets (buttons, cards, inputs) must work at any width"
+    - "Test every screen at 360px (small phone), 768px (tablet), 1440px (desktop)"
+
+accessibility:
+  priority: "WCAG 2.1 AA compliance minimum"
+  rules:
+    - "All interactive elements must have Semantics labels"
+    - "Contrast ratio: 4.5:1 minimum for text, 3:1 for large text — verify per theme"
+    - "All images/icons must have semantic descriptions"
+    - "Form fields must have associated labels (not just placeholder text)"
+    - "Error messages must be announced to screen readers"
+    - "Focus order must follow logical reading order"
+    - "Keyboard navigation must work on web and desktop"
+    - "No information conveyed by color alone (use icons + text alongside color)"
+  theme_specific:
+    - "Each of the 6 theme variations must independently pass contrast checks"
+    - "Semantic colors (success, warning, error, info) must be legible in both light and dark"
+    - "Brand voice copy must be screen-reader friendly (no ambiguous abbreviations)"
+  testing:
+    - "Run Flutter accessibility scanner on every screen"
+    - "Test with system font scaling (up to 200%)"
+    - "Verify with TalkBack (Android) and VoiceOver (iOS) on key flows"
+
+# ============================================================
+# BRAND IDENTITY (COMPLETE — SINGLE SOURCE OF TRUTH)
+# ============================================================
+# This section IS the source of truth. No external file needed.
+# NEVER duplicate these values — implement directly from here.
+# ============================================================
+
+brand_identity:
+
+  core:
+    product_name: "Talon™"
+    name_rule: "Always use ™ on first mention per screen. Subsequent mentions can omit ™."
+    tagline: "Strike fast. Track everything."
+    personality: "Sharp, Confident, Streamlined, Trustworthy, Fast, In Control"
+
+  # 3 themes × light/dark = 6 theme variations
+  themes:
+    predator:
+      label: "Predator (Default)"
+      light:
+        primary: "#E67E22"
+        background: "#FFFFFF"
+        surface: "#F8F9FA"
+        text_primary: "#212529"
+        text_secondary: "#6C757D"
+        border: "#DEE2E6"
+      dark:
+        primary: "#F39C12"
+        background: "#1A1A1A"
+        surface: "#2D2D2D"
+        text_primary: "#FFFFFF"
+        text_secondary: "#ADB5BD"
+        border: "#404040"
+
+    precision:
+      label: "Precision"
+      light:
+        primary: "#0A5C5C"
+        background: "#FFFFFF"
+        surface: "#F8FAFC"
+        text_primary: "#0F172A"
+        text_secondary: "#475569"
+        border: "#E2E8F0"
+      dark:
+        primary: "#14B8A6"
+        background: "#0F172A"
+        surface: "#1E293B"
+        text_primary: "#F8FAFC"
+        text_secondary: "#94A3B8"
+        border: "#334155"
+
+    strike:
+      label: "Strike"
+      light:
+        primary: "#C2410C"
+        background: "#FFFFFF"
+        surface: "#F9FAFB"
+        text_primary: "#030712"
+        text_secondary: "#4B5563"
+        border: "#E5E7EB"
+      dark:
+        primary: "#F97316"
+        background: "#030712"
+        surface: "#111827"
+        text_primary: "#F9FAFB"
+        text_secondary: "#9CA3AF"
+        border: "#1F2937"
+
+  semantic_colors:
+    success:
+      light: "#2E7D32"
+      dark: "#4CAF50"
+    warning:
+      light: "#ED6C02"
+      dark: "#FF9800"
+    error:
+      light: "#D32F2F"
+      dark: "#F44336"
+    info:
+      light: "#0288D1"
+      dark: "#29B6F6"
+
+  typography:
+    fonts:
+      headlines: "Montserrat (weights: 700, 600)"
+      body: "Inter (weights: 400, 500, 600)"
+      monospace: "JetBrains Mono (weights: 400, 500) — for SKUs, inventory numbers, barcodes"
+    sizes_desktop:
+      h1: "48px / weight 700"
+      h2: "32px / weight 700"
+      h3: "24px / weight 600"
+      h4: "20px / weight 600"
+      body_large: "18px / weight 400"
+      body_regular: "16px / weight 400"
+      body_small: "14px / weight 400"
+      caption: "12px / weight 500 / UPPERCASE"
+      button: "16px / weight 600"
+    sizes_mobile:
+      h1: "32px"
+      h2: "24px"
+      h3: "20px"
+      body: "16px"
+      small: "14px"
+
+  logo:
+    formats:
+      logo_only: "App icon, favicon, square spaces"
+      wordmark_only: "Talon™ in headers, loading screens"
+      logo_wordmark: "Login screen, website, marketing"
+    note: "Logo files provided separately"
+
+  brand_voice:
+    predator:
+      tone: "Serious, Powerful"
+      sale_complete: "Secured."
+      error: "Halt. [reason]"
+      low_stock: "Grip low: [x] left"
+      welcome: "Ready. Set. Strike."
+      loading: "Gripping data..."
+    precision:
+      tone: "Calm, Analytical"
+      sale_complete: "Verified."
+      error: "Exception: [reason]"
+      low_stock: "Threshold reached: [x]"
+      welcome: "System ready."
+      loading: "Calibrating..."
+    strike:
+      tone: "Energetic, Fast"
+      sale_complete: "Done."
+      error: "Miss. Try again."
+      low_stock: "Running low: [x]"
+      welcome: "Let's go."
+      loading: "Loading fast..."
+
+  components:
+    buttons:
+      standard:
+        height: "48px"
+        padding: "24px 32px"
+        radius: "4px (sharp — intentional)"
+      small:
+        height: "36px"
+        padding: "16px 24px"
+        radius: "4px"
+      variants:
+        primary: "Background = theme primary color, Text = white"
+        secondary: "1px border = theme primary, Text = theme primary"
+        tertiary: "Text = theme text_primary, underline on hover"
+    cards:
+      padding: "24px"
+      background: "theme surface color"
+      border: "1px solid theme border color"
+      radius: "8px"
+      shadow: "None"
+    inputs:
+      height: "48px"
+      padding: "16px"
+      border: "1px solid theme border"
+      border_focus: "2px solid theme primary"
+      radius: "4px"
+      label: "Caption style (12px/500/UPPERCASE) above field"
+    tables:
+      header: "Caption style on theme surface background"
+      cell_padding: "16px 24px"
+      border_bottom: "1px solid theme border"
+      hover_row: "5% opacity of theme primary"
+    alerts:
+      success: "Icon ✓, Background success 10% opacity, Border-left 4px solid success"
+      warning: "Icon ⚠, Background warning 10% opacity, Border-left 4px solid warning"
+      error: "Icon ✗, Background error 10% opacity, Border-left 4px solid error"
+      info: "Icon ℹ, Background info 10% opacity, Border-left 4px solid info"
+
+  layout_principles:
+    - "Sharp corners (4px radius maximum, 8px for cards only)"
+    - "Ample whitespace (16px/24px base increments)"
+    - "Data-forward: tables and numbers prominently displayed"
+    - "Flat design with intentional contrast"
+    - "Dark mode supported by default"
+
+  marketing:
+    tagline: "Strike fast. Track everything."
+    key_messages:
+      - "Complete control. Complete confidence."
+      - "Fast. Sharp. Easy. (cashier-facing)"
+      - "The POS system built for businesses that mean business."
+    do_not_use: "Generic office stock photos, cartoons, overly bright imagery, cluttered layouts"
+
+# ============================================================
+# FEATURE ROADMAP
+# ============================================================
+# done: false → not started
+# done: true  → completed
+#
+# Tags:
+#   [MVP]    — part of minimum viable demo (golden path)
+#   [CORE]   — required for phase completion
+#   [FUTURE] — on the roadmap, not being built now
+# ============================================================
+
+roadmap:
+
+  # ----------------------------------------------------------
+  # MVP: THE GOLDEN PATH
+  # ----------------------------------------------------------
+  # Login → Select store → Add product to cart → Process payment
+  # → Generate receipt → See it in a report
+  # Build this FIRST. End to end. Then expand.
+  # ----------------------------------------------------------
+
+  mvp:
+    description: "Minimum path to a working sale, end-to-end"
+    tasks:
+      - task: "App shell with theme system (all 6 themes functional)"
+        tag: "MVP"
+        done: false
+      - task: "Auth — login/logout with role selection"
+        tag: "MVP"
+        done: false
+      - task: "Store selector — pick active store"
+        tag: "MVP"
+        done: false
+      - task: "Product list — display products for active store"
+        tag: "MVP"
+        done: false
+      - task: "Cart — add/remove items, adjust quantity"
+        tag: "MVP"
+        done: false
+      - task: "Checkout — process cash payment with tax calculation"
+        tag: "MVP"
+        done: false
+      - task: "Receipt — generate and display (PDF, no printer yet)"
+        tag: "MVP"
+        done: false
+      - task: "Sales report — list today's transactions"
+        tag: "MVP"
+        done: false
+      - task: "Local DB setup (Drift) — offline storage working"
+        tag: "MVP"
+        done: false
+      - task: "Supabase connection — cloud sync working"
+        tag: "MVP"
+        done: false
+      - task: "Landing page with hero, feature highlights, theme showcase, and CTAs"
+        tag: "MVP"
+        done: false
+      - task: "Marketing one-pager — product summary, key benefits, pricing/contact CTA"
+        tag: "MVP"
+        done: false
+
+  # ----------------------------------------------------------
+  # PHASE 1: CORE FOUNDATION
+  # ----------------------------------------------------------
+
+  phase_1:
+    name: "Core Foundation"
+    description: "Must exist before anything else works"
+    depends_on: "MVP complete"
+
+    user_management:
+      - task: "Role-based access control (Admin, Manager, Cashier)"
+        tag: "CORE"
+        done: false
+      - task: "Store-level permissions"
+        tag: "CORE"
+        done: false
+      - task: "Audit logs (who did what, when)"
+        tag: "CORE"
+        done: false
+
+    multi_store:
+      - task: "Store creation and settings"
+        tag: "CORE"
+        done: false
+      - task: "Store-specific tax rates"
+        tag: "CORE"
+        done: false
+      - task: "Store-specific currency"
+        tag: "CORE"
+        done: false
+      - task: "Store-specific receipt headers"
+        tag: "CORE"
+        done: false
+      - task: "Central management dashboard"
+        tag: "CORE"
+        done: false
+
+    product_inventory:
+      - task: "Product catalog (SKU, name, price, description)"
+        tag: "CORE"
+        done: false
+      - task: "Product variants (size, color)"
+        tag: "CORE"
+        done: false
+      - task: "Categories and subcategories"
+        tag: "CORE"
+        done: false
+      - task: "Bulk import/export (CSV)"
+        tag: "CORE"
+        done: false
+      - task: "Inventory per store (stock counts per location)"
+        tag: "CORE"
+        done: false
+      - task: "Real-time stock updates on sale"
+        tag: "CORE"
+        done: false
+
+    technical_foundation:
+      - task: "Offline-first architecture (works without internet)"
+        tag: "CORE"
+        done: false
+      - task: "Auto-sync when back online (sync engine + queue)"
+        tag: "CORE"
+        done: false
+      - task: "Supabase Realtime subscriptions (live sync)"
+        tag: "CORE"
+        done: false
+      - task: "Automated backups strategy"
+        tag: "CORE"
+        done: false
+
+  # ----------------------------------------------------------
+  # PHASE 2: CORE BUSINESS OPERATIONS
+  # ----------------------------------------------------------
+
+  phase_2:
+    name: "Core Business Operations"
+    description: "Daily transaction features"
+    depends_on: "Phase 1 complete"
+
+    pos_terminal:
+      - task: "Product search by name and SKU"
+        tag: "CORE"
+        done: false
+      - task: "Barcode scan input (camera-based, no hardware yet)"
+        tag: "CORE"
+        done: false
+      - task: "Item-level discounts"
+        tag: "CORE"
+        done: false
+      - task: "Cart-level discounts"
+        tag: "CORE"
+        done: false
+      - task: "Card payment processing"
+        tag: "CORE"
+        done: false
+      - task: "Mobile money payment"
+        tag: "CORE"
+        done: false
+      - task: "Split tender (multiple payment methods)"
+        tag: "CORE"
+        done: false
+      - task: "Multi-currency support"
+        tag: "CORE"
+        done: false
+      - task: "Tax calculation (auto based on product + store)"
+        tag: "CORE"
+        done: false
+      - task: "Email receipt"
+        tag: "CORE"
+        done: false
+      - task: "SMS receipt"
+        tag: "CORE"
+        done: false
+
+    transaction_management:
+      - task: "Returns and refunds (with original transaction lookup)"
+        tag: "CORE"
+        done: false
+      - task: "End-of-day reconciliation"
+        tag: "CORE"
+        done: false
+
+    cash_management:
+      - task: "Cash drawer open/close tracking"
+        tag: "CORE"
+        done: false
+      - task: "Cash counting and discrepancy alerts"
+        tag: "CORE"
+        done: false
+
+    basic_reports:
+      - task: "Sales by store"
+        tag: "CORE"
+        done: false
+      - task: "Sales by cashier"
+        tag: "CORE"
+        done: false
+      - task: "Sales by time period"
+        tag: "CORE"
+        done: false
+      - task: "Export to CSV/Excel"
+        tag: "CORE"
+        done: false
+
+    hardware_integration:
+      - task: "Barcode scanner (physical device via platform channel)"
+        tag: "CORE"
+        done: false
+      - task: "Receipt printer integration"
+        tag: "CORE"
+        done: false
+      - task: "Cash drawer integration"
+        tag: "CORE"
+        done: false
+
+  # ----------------------------------------------------------
+  # PHASE 3: INTELLIGENCE & GROWTH
+  # ----------------------------------------------------------
+
+  phase_3:
+    name: "Intelligence & Growth"
+    description: "Management capabilities on top of operational data"
+    depends_on: "Phase 2 complete"
+
+    advanced_inventory:
+      - task: "Stock transfers between stores"
+        tag: "CORE"
+        done: false
+      - task: "Purchase orders (create and receive)"
+        tag: "CORE"
+        done: false
+      - task: "Supplier management"
+        tag: "CORE"
+        done: false
+      - task: "Stocktaking with variance reporting"
+        tag: "CORE"
+        done: false
+      - task: "Expiry date tracking"
+        tag: "CORE"
+        done: false
+      - task: "Low stock alerts (configurable thresholds)"
+        tag: "CORE"
+        done: false
+      - task: "Reorder suggestions (based on sales velocity)"
+        tag: "CORE"
+        done: false
+
+    advanced_reports:
+      - task: "Profit and loss (Revenue - COGS)"
+        tag: "CORE"
+        done: false
+      - task: "Tax reports by jurisdiction"
+        tag: "CORE"
+        done: false
+      - task: "Best/worst sellers"
+        tag: "CORE"
+        done: false
+      - task: "Inventory valuation"
+        tag: "CORE"
+        done: false
+      - task: "Margin analysis (by product/category)"
+        tag: "CORE"
+        done: false
+      - task: "Store performance comparison"
+        tag: "CORE"
+        done: false
+      - task: "Custom date comparisons (YoY, WoW)"
+        tag: "CORE"
+        done: false
+
+    crm:
+      - task: "Customer profiles (contact info + purchase history)"
+        tag: "CORE"
+        done: false
+      - task: "Customer groups (wholesale, VIP) with tiered pricing"
+        tag: "CORE"
+        done: false
+      - task: "Loyalty program (points per purchase, redeemable)"
+        tag: "CORE"
+        done: false
+      - task: "Store credit management"
+        tag: "CORE"
+        done: false
+
+    alerts_notifications:
+      - task: "Low stock alerts"
+        tag: "CORE"
+        done: false
+      - task: "Daily sales summary notification"
+        tag: "CORE"
+        done: false
+      - task: "Price change alerts"
+        tag: "CORE"
+        done: false
+      - task: "System health alerts (offline stores)"
+        tag: "CORE"
+        done: false
+      - task: "In-app notification center"
+        tag: "CORE"
+        done: false
+      - task: "Email notification delivery"
+        tag: "CORE"
+        done: false
+      - task: "SMS notification delivery"
+        tag: "CORE"
+        done: false
+
+  # ----------------------------------------------------------
+  # PHASE 4: ECOSYSTEM & INTEGRATION
+  # ----------------------------------------------------------
+
+  phase_4:
+    name: "Ecosystem & Integration"
+    description: "Extends Talon's reach. Requires stable core."
+    depends_on: "Phase 3 complete"
+
+    integrations:
+      - task: "E-commerce sync — Shopify (inventory + orders)"
+        tag: "FUTURE"
+        done: false
+      - task: "E-commerce sync — WooCommerce (inventory + orders)"
+        tag: "FUTURE"
+        done: false
+      - task: "Accounting — QuickBooks integration"
+        tag: "FUTURE"
+        done: false
+      - task: "Accounting — Xero integration"
+        tag: "FUTURE"
+        done: false
+      - task: "Public REST API for custom integrations"
+        tag: "FUTURE"
+        done: false
+
+    advanced_hardware:
+      - task: "Customer-facing display"
+        tag: "FUTURE"
+        done: false
+      - task: "Kitchen display system (restaurants)"
+        tag: "FUTURE"
+        done: false
+
+    advanced_features:
+      - task: "Gift card management"
+        tag: "FUTURE"
+        done: false
+      - task: "Booking/appointment module"
+        tag: "FUTURE"
+        done: false
+      - task: "Delivery management"
+        tag: "FUTURE"
+        done: false
+      - task: "Employee time clock"
+        tag: "FUTURE"
+        done: false
+      - task: "QR code menus"
+        tag: "FUTURE"
+        done: false
+      - task: "Self-service kiosk mode"
+        tag: "FUTURE"
+        done: false
+
+    predictive_analytics:
+      - task: "Demand forecasting (based on historical sales)"
+        tag: "FUTURE"
+        done: false
+
+    marketing:
+      - task: "Landing page — hero, features, theme showcase, CTAs"
+        tag: "FUTURE"
+        done: false
+      - task: "Marketing one-pager template — product summary, key benefits, pricing CTA"
+        tag: "FUTURE"
+        done: false
+      - task: "App store screenshots showing theme options"
+        tag: "FUTURE"
+        done: false
+
+# ============================================================
+# NON-FUNCTIONAL REQUIREMENTS
+# ============================================================
+
+non_functional:
+  performance:
+    - "POS checkout flow completes in under 2 seconds"
+    - "Product search returns results within 500ms"
+    - "App launches to usable state within 3 seconds"
+    - "Sync queue drains within 30 seconds of reconnection (for <100 items)"
+  offline:
+    - "Full POS functionality without internet"
+    - "Local DB retains at least 30 days of transaction history"
+    - "Sync queue handles 1000+ pending mutations without data loss"
+  scale:
+    - "Support 10,000+ products per store"
+    - "Support 50+ stores per organization"
+    - "Handle 500+ transactions per store per day"
+
+# ============================================================
+# TESTING STRATEGY
+# ============================================================
+
+testing:
+  philosophy: >
+    Useful tests only. No boilerplate tests, no testing getters/setters,
+    no tests that just verify Flutter framework behavior. Every test must
+    answer: "what breaks if this fails?" If the answer is "nothing important",
+    don't write it.
+  tools: "flutter_test, bloc_test, mocktail, integration_test"
+  what_to_test:
+    - "Business logic: tax calculation, discount rules, inventory deltas, payment splitting"
+    - "Bloc state transitions: only for complex flows (checkout, sync, cart operations)"
+    - "Sync engine: queue processing, retry logic, conflict resolution"
+    - "Repository contracts: verify implementations return expected data shapes"
+  what_not_to_test:
+    - "Simple UI rendering (Flutter already tests its own widgets)"
+    - "Bloc boilerplate (don't test that emitting a state emits a state)"
+    - "DTOs/models with no logic (just serialization)"
+    - "Trivial getters, constructors, or pass-through methods"
+  grow_over_time: >
+    Start lean. Add tests as features stabilize and bugs surface.
+    A failing test should tell you exactly what broke and why.
+
+# ============================================================
+# QUALITY CHECKS
+# ============================================================
+# Every screen must pass ALL of these before marked done.
+# ============================================================
+
+quality_checks:
+  brand:
+    - "Primary color matches active theme from brand_identity section"
+    - "Typography follows brand hierarchy (Montserrat/Inter/JetBrains Mono)"
+    - "Spacing uses 16px/24px increments"
+    - "Alert styles match brand_identity specs (left border, 10% bg)"
+    - "UI copy matches active theme's brand voice"
+    - "™ symbol on first 'Talon' mention per screen"
+    - "Theme selector functional in settings"
+    - "Light/dark mode toggles correctly"
+  responsiveness:
+    - "Screen renders correctly at 360px (mobile), 768px (tablet), 1440px (desktop)"
+    - "No horizontal overflow or clipped content at any breakpoint"
+    - "Navigation adapts: bottom nav (mobile), rail (tablet), side drawer (desktop)"
+    - "Touch targets are minimum 48×48px"
+  accessibility:
+    - "All interactive elements have Semantics labels"
+    - "Text contrast ratio meets 4.5:1 in all 6 theme variations"
+    - "Screen works with system font scaling at 200%"
+    - "No information conveyed by color alone"
+  architecture:
+    - "Screen works offline (or gracefully degrades with clear message)"
+    - "No direct Supabase imports in presentation or domain layers"
