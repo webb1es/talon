@@ -9,27 +9,27 @@ Talon™ is an offline-first, multi-store POS system. Flutter + Supabase. One co
 
 ## Tech Stack
 
-| Layer | Technology |
-|-------|-----------|
-| Frontend | Flutter (mobile, web, desktop) |
-| Backend | Supabase (PostgreSQL + Realtime + Auth + RLS + Edge Functions) |
-| Local DB | Drift (SQLite) — type-safe, mirrors Postgres schema |
-| State | flutter_bloc / Cubit |
-| DI | get_it + injectable |
-| Models | freezed + json_serializable |
-| Fonts | google_fonts (Montserrat, Inter, JetBrains Mono) |
-| Routing | GoRouter |
-| Testing | bloc_test, mocktail, integration_test |
+| Layer    | Technology                                                     |
+|----------|----------------------------------------------------------------|
+| Frontend | Flutter (mobile, web, desktop)                                 |
+| Backend  | Supabase (PostgreSQL + Realtime + Auth + RLS + Edge Functions) |
+| Local DB | Drift (SQLite) — type-safe, mirrors Postgres schema            |
+| State    | flutter_bloc / Cubit                                           |
+| DI       | get_it + injectable                                            |
+| Models   | freezed + json_serializable                                    |
+| Fonts    | google_fonts (Montserrat, Inter, JetBrains Mono)               |
+| Routing  | GoRouter                                                       |
+| Testing  | bloc_test, mocktail, integration_test                          |
 
 ## Architecture
 
 Clean Architecture (3-layer). Dependency flows inward: `Presentation → Domain ← Data`
 
-| Layer | Responsibility | Depends on |
-|-------|---------------|-----------|
-| Presentation | Widgets, screens, Blocs/Cubits | Domain only |
-| Domain | Entities, repository contracts (abstract), use cases | Nothing — pure Dart |
-| Data | Repository impls, DTOs, Supabase, Drift DAOs | Domain contracts |
+| Layer        | Responsibility                                       | Depends on          |
+|--------------|------------------------------------------------------|---------------------|
+| Presentation | Widgets, screens, Blocs/Cubits                       | Domain only         |
+| Domain       | Entities, repository contracts (abstract), use cases | Nothing — pure Dart |
+| Data         | Repository impls, DTOs, Supabase, Drift DAOs         | Domain contracts    |
 
 **Backend swap:** Domain defines abstract repos. Data implements them. DI wires them. Change one registration to swap backends. UI and business logic untouched.
 
@@ -37,11 +37,11 @@ Clean Architecture (3-layer). Dependency flows inward: `Presentation → Domain 
 
 ### Storage
 
-| Layer | Tech | Role |
-|-------|------|------|
-| Cloud | Supabase PostgreSQL | Source of truth, multi-store sync, RLS |
-| Local | Drift (SQLite) | Offline-first, local queries, cache |
-| Queue | Drift table `sync_queue` | Pending mutations when offline |
+| Layer | Tech                     | Role                                   |
+|-------|--------------------------|----------------------------------------|
+| Cloud | Supabase PostgreSQL      | Source of truth, multi-store sync, RLS |
+| Local | Drift (SQLite)           | Offline-first, local queries, cache    |
+| Queue | Drift table `sync_queue` | Pending mutations when offline         |
 
 ### Sync Strategy
 
@@ -53,27 +53,27 @@ Clean Architecture (3-layer). Dependency flows inward: `Presentation → Domain 
 
 ### Sync Queue Schema
 
-| Field | Type |
-|-------|------|
-| id | auto-increment PK |
+| Field       | Type                                     |
+|-------------|------------------------------------------|
+| id          | auto-increment PK                        |
 | entity_type | string (product, transaction, inventory) |
-| entity_id | UUID |
-| action | enum: create, update, delete |
-| payload | JSON (full entity snapshot) |
-| created_at | timestamp (FIFO ordering) |
-| retry_count | int (default 0) |
-| status | enum: pending, processing, failed |
+| entity_id   | UUID                                     |
+| action      | enum: create, update, delete             |
+| payload     | JSON (full entity snapshot)              |
+| created_at  | timestamp (FIFO ordering)                |
+| retry_count | int (default 0)                          |
+| status      | enum: pending, processing, failed        |
 
 Processing: FIFO by created_at. Exponential backoff (2s, 4s, 8s, 16s, max 60s). Max 5 retries, then mark failed for admin review.
 
 ### Conflict Resolution
 
-| Data Type | Strategy | Reason |
-|-----------|----------|--------|
-| Sales/transactions | Append-only, no conflict | A sale is a fact. Never overwritten. |
-| Inventory quantities | Server-reconciled deltas | Both stores' sales apply. Manual adjustments use last-write-wins. |
-| Product catalog | Last-write-wins (timestamp) | Low contention. |
-| Settings | Last-write-wins (timestamp) | Admin authority. |
+| Data Type            | Strategy                    | Reason                                                            |
+|----------------------|-----------------------------|-------------------------------------------------------------------|
+| Sales/transactions   | Append-only, no conflict    | A sale is a fact. Never overwritten.                              |
+| Inventory quantities | Server-reconciled deltas    | Both stores' sales apply. Manual adjustments use last-write-wins. |
+| Product catalog      | Last-write-wins (timestamp) | Low contention.                                                   |
+| Settings             | Last-write-wins (timestamp) | Admin authority.                                                  |
 
 ### Database Tables
 
@@ -117,13 +117,13 @@ lib/
 
 Breakpoints: **mobile** <600px · **tablet** 600–1024px · **desktop** >1024px
 
-| Element | Mobile | Tablet | Desktop |
-|---------|--------|--------|---------|
-| Navigation | Bottom nav | Rail | Side drawer |
-| POS terminal | Single column | Split panel | Split panel |
-| Data tables | Card/list view | Full table | Full table |
-| Dialogs | Fullscreen | Centered modal | Centered modal |
-| Typography | Mobile scale | Desktop scale | Desktop scale |
+| Element      | Mobile         | Tablet         | Desktop        |
+|--------------|----------------|----------------|----------------|
+| Navigation   | Bottom nav     | Rail           | Side drawer    |
+| POS terminal | Single column  | Split panel    | Split panel    |
+| Data tables  | Card/list view | Full table     | Full table     |
+| Dialogs      | Fullscreen     | Centered modal | Centered modal |
+| Typography   | Mobile scale   | Desktop scale  | Desktop scale  |
 
 - Use LayoutBuilder/MediaQuery — never hardcode widths
 - Touch targets: 48×48px minimum on all platforms
@@ -156,45 +156,45 @@ WCAG 2.1 AA minimum. All 6 theme variations must independently pass.
 
 **Predator (Default)**
 
-| Token | Light | Dark |
-|-------|-------|------|
-| Primary | `#E67E22` | `#F39C12` |
-| Background | `#FFFFFF` | `#1A1A1A` |
-| Surface | `#F8F9FA` | `#2D2D2D` |
-| Text Primary | `#212529` | `#FFFFFF` |
+| Token          | Light     | Dark      |
+|----------------|-----------|-----------|
+| Primary        | `#E67E22` | `#F39C12` |
+| Background     | `#FFFFFF` | `#1A1A1A` |
+| Surface        | `#F8F9FA` | `#2D2D2D` |
+| Text Primary   | `#212529` | `#FFFFFF` |
 | Text Secondary | `#6C757D` | `#ADB5BD` |
-| Border | `#DEE2E6` | `#404040` |
+| Border         | `#DEE2E6` | `#404040` |
 
 **Precision**
 
-| Token | Light | Dark |
-|-------|-------|------|
-| Primary | `#0A5C5C` | `#14B8A6` |
-| Background | `#FFFFFF` | `#0F172A` |
-| Surface | `#F8FAFC` | `#1E293B` |
-| Text Primary | `#0F172A` | `#F8FAFC` |
+| Token          | Light     | Dark      |
+|----------------|-----------|-----------|
+| Primary        | `#0A5C5C` | `#14B8A6` |
+| Background     | `#FFFFFF` | `#0F172A` |
+| Surface        | `#F8FAFC` | `#1E293B` |
+| Text Primary   | `#0F172A` | `#F8FAFC` |
 | Text Secondary | `#475569` | `#94A3B8` |
-| Border | `#E2E8F0` | `#334155` |
+| Border         | `#E2E8F0` | `#334155` |
 
 **Strike**
 
-| Token | Light | Dark |
-|-------|-------|------|
-| Primary | `#C2410C` | `#F97316` |
-| Background | `#FFFFFF` | `#030712` |
-| Surface | `#F9FAFB` | `#111827` |
-| Text Primary | `#030712` | `#F9FAFB` |
+| Token          | Light     | Dark      |
+|----------------|-----------|-----------|
+| Primary        | `#C2410C` | `#F97316` |
+| Background     | `#FFFFFF` | `#030712` |
+| Surface        | `#F9FAFB` | `#111827` |
+| Text Primary   | `#030712` | `#F9FAFB` |
 | Text Secondary | `#4B5563` | `#9CA3AF` |
-| Border | `#E5E7EB` | `#1F2937` |
+| Border         | `#E5E7EB` | `#1F2937` |
 
 **Semantic Colors (all themes)**
 
-| Type | Light | Dark |
-|------|-------|------|
+| Type    | Light     | Dark      |
+|---------|-----------|-----------|
 | Success | `#2E7D32` | `#4CAF50` |
 | Warning | `#ED6C02` | `#FF9800` |
-| Error | `#D32F2F` | `#F44336` |
-| Info | `#0288D1` | `#29B6F6` |
+| Error   | `#D32F2F` | `#F44336` |
+| Info    | `#0288D1` | `#29B6F6` |
 
 ### Typography
 
@@ -208,13 +208,13 @@ H1: 32px · H2: 24px · H3: 20px · Body: 16px · Small: 14px
 
 ### Brand Voice
 
-| Event | Predator (Serious) | Precision (Calm) | Strike (Energetic) |
-|-------|-------------------|------------------|-------------------|
-| Sale complete | "Secured." | "Verified." | "Done." |
-| Error | "Halt. [reason]" | "Exception: [reason]" | "Miss. Try again." |
-| Low stock | "Grip low: [x] left" | "Threshold reached: [x]" | "Running low: [x]" |
-| Welcome | "Ready. Set. Strike." | "System ready." | "Let's go." |
-| Loading | "Gripping data..." | "Calibrating..." | "Loading fast..." |
+| Event         | Predator (Serious)    | Precision (Calm)         | Strike (Energetic) |
+|---------------|-----------------------|--------------------------|--------------------|
+| Sale complete | "Secured."            | "Verified."              | "Done."            |
+| Error         | "Halt. [reason]"      | "Exception: [reason]"    | "Miss. Try again." |
+| Low stock     | "Grip low: [x] left"  | "Threshold reached: [x]" | "Running low: [x]" |
+| Welcome       | "Ready. Set. Strike." | "System ready."          | "Let's go."        |
+| Loading       | "Gripping data..."    | "Calibrating..."         | "Loading fast..."  |
 
 ### Components
 
@@ -411,18 +411,18 @@ Tags: `[MVP]` = golden path · `[CORE]` = required for phase · `[FUTURE]` = on 
 
 ## Non-Functional Requirements
 
-| Category | Target |
-|----------|--------|
-| Checkout flow | < 2 seconds |
-| Product search | < 500ms |
-| App launch | < 3 seconds to usable |
-| Queue drain | < 30s for 100 items on reconnect |
-| Offline | Full POS functionality without internet |
-| Data retention | 30+ days transaction history locally |
-| Queue capacity | 1000+ pending mutations |
-| Products | 10,000+ per store |
-| Stores | 50+ per organization |
-| Transactions | 500+ per store per day |
+| Category       | Target                                  |
+|----------------|-----------------------------------------|
+| Checkout flow  | < 2 seconds                             |
+| Product search | < 500ms                                 |
+| App launch     | < 3 seconds to usable                   |
+| Queue drain    | < 30s for 100 items on reconnect        |
+| Offline        | Full POS functionality without internet |
+| Data retention | 30+ days transaction history locally    |
+| Queue capacity | 1000+ pending mutations                 |
+| Products       | 10,000+ per store                       |
+| Stores         | 50+ per organization                    |
+| Transactions   | 500+ per store per day                  |
 
 ## Quality Checklist (per screen)
 
