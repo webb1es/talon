@@ -1,0 +1,23 @@
+targets:
+  $default:
+    builders:
+      freezed:
+        generate_for:
+          include:
+            - lib/domain/entities/**.dart
+            - lib/core/theme/**.dart
+            - lib/core/error/**.dart
+      json_serializable:
+        generate_for:
+          include:
+            - lib/data/models/**.dart
+      injectable_generator|injectable_builder:
+        generate_for:
+          include:
+            - lib/core/di/**.dart
+            - lib/data/**.dart
+            - lib/presentation/**.dart
+      drift_dev:
+        generate_for:
+          include:
+            - lib/data/drift/**.dart
