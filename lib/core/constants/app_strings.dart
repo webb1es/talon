@@ -59,6 +59,17 @@ class AppStrings {
   static const selectStore = 'Select Store';
   static const retry = 'Retry';
 
+  // Products
+  static const allCategories = 'All';
+  static const noProducts = 'No products found';
+
+  // Cart
+  static const cart = 'Cart';
+  static const clearCart = 'Clear';
+  static const subtotal = 'Subtotal';
+  static const checkout = 'Checkout';
+  static const emptyCart = 'Cart is empty';
+
   // Navigation
   static const pos = 'POS';
   static const inventory = 'Inventory';

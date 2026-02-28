@@ -4,6 +4,7 @@ import '../../presentation/auth/bloc/auth_cubit.dart';
 import '../../presentation/auth/screens/login_screen.dart';
 import '../../presentation/common/app_shell.dart';
 import '../../presentation/common/placeholder_screen.dart';
+import '../../presentation/pos/screens/pos_screen.dart';
 import '../../presentation/store/bloc/store_cubit.dart';
 import '../../presentation/store/screens/store_selector_screen.dart';
 import '../di/injection.dart';
@@ -60,8 +61,7 @@ final router = GoRouter(
             GoRoute(
               path: AppRoutes.pos,
               name: 'pos',
-              builder: (context, state) =>
-                  const PlaceholderScreen(title: 'POS'),
+              builder: (context, state) => const PosScreen(),
             ),
           ],
         ),
