@@ -5,7 +5,7 @@ import '../../presentation/auth/screens/login_screen.dart';
 import '../../presentation/common/app_shell.dart';
 import '../../presentation/landing/screens/landing_screen.dart';
 import '../../presentation/landing/screens/one_pager_screen.dart';
-import '../../presentation/common/placeholder_screen.dart';
+import '../../presentation/inventory/screens/inventory_screen.dart';
 import '../../presentation/pos/screens/pos_screen.dart';
 import '../../presentation/reports/screens/reports_screen.dart';
 import '../../presentation/settings/screens/settings_screen.dart';
@@ -88,8 +88,7 @@ final router = GoRouter(
             GoRoute(
               path: AppRoutes.inventory,
               name: 'inventory',
-              builder: (context, state) =>
-                  const PlaceholderScreen(title: 'Inventory'),
+              builder: (context, state) => const InventoryScreen(),
             ),
           ],
         ),

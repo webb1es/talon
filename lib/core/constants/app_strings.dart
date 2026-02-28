@@ -154,6 +154,15 @@ class AppStrings {
   static const switchStore = 'Switch Store';
   static const logoutConfirm = 'Are you sure you want to log out?';
 
+  // Inventory
+  static const totalItems = 'items';
+  static const lowStockLabel = 'low';
+  static const outOfStock = 'out';
+  static const stockQuantity = 'Stock quantity';
+  static const stockRequired = 'Enter a quantity';
+  static const save = 'Save';
+  static const sku = 'SKU';
+
   // Navigation
   static const pos = 'POS';
   static const inventory = 'Inventory';

@@ -8,6 +8,7 @@ class Products extends Table {
   TextColumn get currencyCode => text().withDefault(const Constant('USD'))();
   TextColumn get category => text()();
   TextColumn get storeId => text()();
+  IntColumn get stock => integer().withDefault(const Constant(0))();
 
   @override
   Set<Column> get primaryKey => {id};

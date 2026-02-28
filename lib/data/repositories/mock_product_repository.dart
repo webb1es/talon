@@ -9,6 +9,11 @@ class MockProductRepository implements ProductRepository {
 
     return Success(_mockProducts.map((p) => p.copyWith(storeId: storeId)).toList());
   }
+
+  @override
+  Future<Result<void>> updateStock({required String productId, required int stock}) async {
+    return const Success(null);
+  }
 }
 
 const _mockProducts = [

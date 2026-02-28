@@ -12,5 +12,6 @@ abstract class Product with _$Product {
     required String currencyCode,
     required String category,
     required String storeId,
+    @Default(0) int stock,
   }) = _Product;
 }
