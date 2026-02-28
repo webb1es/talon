@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 import '../../../core/constants/app_strings.dart';
 import '../../../domain/entities/product.dart';
+import '../../common/search_field.dart';
 import 'product_card.dart';
 
 /// Product list with category filter chips and responsive grid.
@@ -16,17 +17,48 @@ class ProductList extends StatefulWidget {
 }
 
 class _ProductListState extends State<ProductList> {
+  final _searchController = TextEditingController();
   String? _selectedCategory;
+  String _query = '';
+
+  @override
+  void dispose() {
+    _searchController.dispose();
+    super.dispose();
+  }
+
+  List<Product> get _filtered {
+    var result = widget.products;
+    if (_selectedCategory != null) {
+      result = result.where((p) => p.category == _selectedCategory).toList();
+    }
+    if (_query.isNotEmpty) {
+      final q = _query.toLowerCase();
+      result = result
+          .where((p) =>
+              p.name.toLowerCase().contains(q) ||
+              p.sku.toLowerCase().contains(q))
+          .toList();
+    }
+    return result;
+  }
 
   @override
   Widget build(BuildContext context) {
     final categories = widget.products.map((p) => p.category).toSet().toList()..sort();
-    final filtered = _selectedCategory == null
-        ? widget.products
-        : widget.products.where((p) => p.category == _selectedCategory).toList();
+    final filtered = _filtered;
 
     return Column(
       children: [
+        SearchField(
+          controller: _searchController,
+          showClear: _query.isNotEmpty,
+          onChanged: (v) => setState(() => _query = v),
+          onClear: () {
+            _searchController.clear();
+            setState(() => _query = '');
+          },
+        ),
         SingleChildScrollView(
           scrollDirection: Axis.horizontal,
           padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),

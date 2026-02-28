@@ -5,6 +5,7 @@ import 'package:uuid/uuid.dart';
 import '../../../core/error/failures.dart';
 import '../../../domain/entities/cart_item.dart';
 import '../../../domain/entities/transaction.dart';
+import '../../../domain/repositories/product_repository.dart';
 import '../../../domain/repositories/transaction_repository.dart';
 
 // -- State --
@@ -36,8 +37,10 @@ class CheckoutError extends CheckoutState {
 @injectable
 class CheckoutCubit extends Cubit<CheckoutState> {
   final TransactionRepository _transactionRepository;
+  final ProductRepository _productRepository;
 
-  CheckoutCubit(this._transactionRepository) : super(const CheckoutIdle());
+  CheckoutCubit(this._transactionRepository, this._productRepository)
+      : super(const CheckoutIdle());
 
   static const taxRate = 0.15; // 15% VAT
 
@@ -86,9 +89,20 @@ class CheckoutCubit extends Cubit<CheckoutState> {
     final result = await _transactionRepository.createTransaction(transaction);
     switch (result) {
       case Success(:final data):
+        await _decrementStock(items);
         emit(CheckoutComplete(data));
       case Fail(:final failure):
         emit(CheckoutError(failure));
+    }
+  }
+
+  Future<void> _decrementStock(List<CartItem> items) async {
+    for (final item in items) {
+      final newStock = (item.product.stock - item.quantity).clamp(0, 999999);
+      await _productRepository.updateStock(
+        productId: item.product.id,
+        stock: newStock,
+      );
     }
   }
 }

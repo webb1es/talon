@@ -3,10 +3,13 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 
 import '../../../core/constants/app_strings.dart';
 import '../../../core/di/injection.dart';
+import '../../common/search_field.dart';
 import '../../store/bloc/store_cubit.dart';
 import '../bloc/inventory_cubit.dart';
+import '../widgets/category_filter.dart';
 import '../widgets/inventory_item_tile.dart';
 import '../widgets/stock_adjust_dialog.dart';
+import '../widgets/summary_chip.dart';
 
 class InventoryScreen extends StatelessWidget {
   const InventoryScreen({super.key});
@@ -28,10 +31,18 @@ class _InventoryView extends StatefulWidget {
 }
 
 class _InventoryViewState extends State<_InventoryView> {
+  final _searchController = TextEditingController();
+
   @override
   void initState() {
     super.initState();
     _load();
+  }
+
+  @override
+  void dispose() {
+    _searchController.dispose();
+    super.dispose();
   }
 
   void _load() {
@@ -77,6 +88,7 @@ class _InventoryViewState extends State<_InventoryView> {
             const Center(child: CircularProgressIndicator()),
           InventoryLoaded() => _InventoryBody(
               state: state,
+              searchController: _searchController,
               onAdjust: (p) => _adjustStock(context, p),
             ),
           InventoryError(:final failure) => Center(
@@ -101,9 +113,14 @@ class _InventoryViewState extends State<_InventoryView> {
 
 class _InventoryBody extends StatelessWidget {
   final InventoryLoaded state;
+  final TextEditingController searchController;
   final ValueChanged<dynamic> onAdjust;
 
-  const _InventoryBody({required this.state, required this.onAdjust});
+  const _InventoryBody({
+    required this.state,
+    required this.searchController,
+    required this.onAdjust,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -112,51 +129,41 @@ class _InventoryBody extends StatelessWidget {
 
     return Column(
       children: [
+        SearchField(
+          controller: searchController,
+          showClear: state.searchQuery.isNotEmpty,
+          onChanged: cubit.search,
+          onClear: () {
+            searchController.clear();
+            cubit.search('');
+          },
+        ),
         // Summary chips
         Padding(
           padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
           child: Row(
             children: [
-              _SummaryChip(
+              SummaryChip(
                 label: '${state.products.length} ${AppStrings.totalItems}',
                 color: colorScheme.primary,
               ),
               const SizedBox(width: 8),
-              _SummaryChip(
+              SummaryChip(
                 label: '${state.lowStockCount} ${AppStrings.lowStockLabel}',
                 color: colorScheme.tertiary,
               ),
               const SizedBox(width: 8),
-              _SummaryChip(
+              SummaryChip(
                 label: '${state.outOfStockCount} ${AppStrings.outOfStock}',
                 color: colorScheme.error,
               ),
             ],
           ),
         ),
-        // Category filter
-        SizedBox(
-          height: 40,
-          child: ListView(
-            scrollDirection: Axis.horizontal,
-            padding: const EdgeInsets.symmetric(horizontal: 16),
-            children: [
-              FilterChip(
-                label: const Text(AppStrings.allCategories),
-                selected: state.selectedCategory == null,
-                onSelected: (_) => cubit.filterByCategory(null),
-              ),
-              const SizedBox(width: 8),
-              for (final cat in state.categories) ...[
-                FilterChip(
-                  label: Text(cat),
-                  selected: state.selectedCategory == cat,
-                  onSelected: (_) => cubit.filterByCategory(cat),
-                ),
-                const SizedBox(width: 8),
-              ],
-            ],
-          ),
+        CategoryFilter(
+          categories: state.categories,
+          selected: state.selectedCategory,
+          onSelected: cubit.filterByCategory,
         ),
         const Divider(),
         // Product list
@@ -175,27 +182,6 @@ class _InventoryBody extends StatelessWidget {
                 ),
         ),
       ],
-    );
-  }
-}
-
-class _SummaryChip extends StatelessWidget {
-  final String label;
-  final Color color;
-
-  const _SummaryChip({required this.label, required this.color});
-
-  @override
-  Widget build(BuildContext context) {
-    return Chip(
-      label: Text(
-        label,
-        style: TextStyle(color: color, fontSize: 12),
-      ),
-      backgroundColor: color.withValues(alpha: 0.08),
-      side: BorderSide.none,
-      padding: EdgeInsets.zero,
-      visualDensity: VisualDensity.compact,
     );
   }
 }

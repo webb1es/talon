@@ -22,15 +22,31 @@ class InventoryLoading extends InventoryState {
 class InventoryLoaded extends InventoryState {
   final List<Product> products;
   final String? selectedCategory;
+  final String searchQuery;
 
-  const InventoryLoaded({required this.products, this.selectedCategory});
+  const InventoryLoaded({
+    required this.products,
+    this.selectedCategory,
+    this.searchQuery = '',
+  });
 
   List<String> get categories =>
       {...products.map((p) => p.category)}.toList()..sort();
 
-  List<Product> get filtered => selectedCategory == null
-      ? products
-      : products.where((p) => p.category == selectedCategory).toList();
+  List<Product> get filtered {
+    var result = selectedCategory == null
+        ? products
+        : products.where((p) => p.category == selectedCategory).toList();
+    if (searchQuery.isNotEmpty) {
+      final q = searchQuery.toLowerCase();
+      result = result
+          .where((p) =>
+              p.name.toLowerCase().contains(q) ||
+              p.sku.toLowerCase().contains(q))
+          .toList();
+    }
+    return result;
+  }
 
   int get lowStockCount => products.where((p) => p.stock < 10).length;
   int get outOfStockCount => products.where((p) => p.stock == 0).length;
@@ -66,6 +82,18 @@ class InventoryCubit extends Cubit<InventoryState> {
       emit(InventoryLoaded(
         products: current.products,
         selectedCategory: category,
+        searchQuery: current.searchQuery,
+      ));
+    }
+  }
+
+  void search(String query) {
+    final current = state;
+    if (current is InventoryLoaded) {
+      emit(InventoryLoaded(
+        products: current.products,
+        selectedCategory: current.selectedCategory,
+        searchQuery: query,
       ));
     }
   }

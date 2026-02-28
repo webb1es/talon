@@ -62,6 +62,7 @@ class AppStrings {
   // Products
   static const allCategories = 'All';
   static const noProducts = 'No products found';
+  static const searchProducts = 'Search by name or SKU';
 
   // Cart
   static const cart = 'Cart';
