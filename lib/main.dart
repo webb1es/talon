@@ -9,6 +9,7 @@ import 'presentation/auth/bloc/auth_cubit.dart';
 import 'presentation/store/bloc/store_cubit.dart';
 
 void main() {
+  WidgetsFlutterBinding.ensureInitialized();
   configureDependencies();
   runApp(const TalonApp());
 }

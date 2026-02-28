@@ -3,7 +3,10 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 
 import '../../../core/constants/app_strings.dart';
 import '../../../domain/entities/cart_item.dart';
+import '../../store/bloc/store_cubit.dart';
 import '../bloc/cart_cubit.dart';
+import '../screens/checkout_dialog.dart';
+import '../screens/receipt_screen.dart';
 import 'cart_footer.dart';
 
 /// Cart panel showing items, quantities, and subtotal.
@@ -41,7 +44,19 @@ class CartPanel extends StatelessWidget {
               ),
             ),
             const Divider(height: 1),
-            CartFooter(subtotal: state.subtotal),
+            CartFooter(
+              subtotal: state.subtotal,
+              onCheckout: () async {
+                final txn = await showCheckoutDialog(context);
+                if (txn != null && context.mounted) {
+                  context.read<CartCubit>().clear();
+                  final storeState = context.read<StoreCubit>().state;
+                  if (storeState is StoreSelected) {
+                    showReceiptDialog(context, txn, storeState.store);
+                  }
+                }
+              },
+            ),
           ],
         );
       },

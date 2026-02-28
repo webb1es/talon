@@ -70,6 +70,23 @@ class AppStrings {
   static const checkout = 'Checkout';
   static const emptyCart = 'Cart is empty';
 
+  // Checkout
+  static const tax = 'Tax (15%)';
+  static const total = 'Total';
+  static const cashTendered = 'Cash tendered';
+  static const change = 'Change';
+  static const confirmPayment = 'Confirm Payment';
+  static const cancel = 'Cancel';
+  static const insufficientAmount = 'Amount must cover total';
+
+  // Receipt
+  static const receipt = 'Receipt';
+  static const print = 'Print';
+  static const done = 'Done';
+  static const cashier = 'Cashier';
+  static const date = 'Date';
+  static const cash = 'Cash';
+
   // Navigation
   static const pos = 'POS';
   static const inventory = 'Inventory';
