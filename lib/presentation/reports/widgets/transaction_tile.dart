@@ -1,0 +1,51 @@
+import 'package:flutter/material.dart';
+import 'package:intl/intl.dart';
+
+import '../../../domain/entities/transaction.dart';
+
+class TransactionTile extends StatelessWidget {
+  final Transaction transaction;
+
+  const TransactionTile({super.key, required this.transaction});
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final timeFormat = DateFormat('HH:mm');
+
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+      child: Row(
+        children: [
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  '#${transaction.id.substring(0, 8).toUpperCase()}',
+                  style: theme.textTheme.bodyMedium?.copyWith(
+                    fontFamily: 'monospace',
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+                const SizedBox(height: 2),
+                Text(
+                  '${timeFormat.format(transaction.createdAt)} · ${transaction.cashierName} · ${transaction.items.length} ${transaction.items.length == 1 ? 'item' : 'items'}',
+                  style: theme.textTheme.bodySmall?.copyWith(
+                    color: theme.colorScheme.onSurfaceVariant,
+                  ),
+                ),
+              ],
+            ),
+          ),
+          Text(
+            '\$${transaction.total.toStringAsFixed(2)}',
+            style: theme.textTheme.titleMedium?.copyWith(
+              fontWeight: FontWeight.w600,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}

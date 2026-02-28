@@ -1,10 +1,7 @@
-import 'package:injectable/injectable.dart';
-
 import '../../core/error/failures.dart';
 import '../../domain/entities/product.dart';
 import '../../domain/repositories/product_repository.dart';
 
-@LazySingleton(as: ProductRepository)
 class MockProductRepository implements ProductRepository {
   @override
   Future<Result<List<Product>>> getProducts({required String storeId}) async {

@@ -1,10 +1,7 @@
-import 'package:injectable/injectable.dart';
-
 import '../../core/error/failures.dart';
 import '../../domain/entities/transaction.dart';
 import '../../domain/repositories/transaction_repository.dart';
 
-@LazySingleton(as: TransactionRepository)
 class MockTransactionRepository implements TransactionRepository {
   final _transactions = <Transaction>[];
 

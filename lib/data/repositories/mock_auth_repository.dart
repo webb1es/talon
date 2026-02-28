@@ -1,4 +1,3 @@
-import 'package:injectable/injectable.dart';
 import 'package:uuid/uuid.dart';
 
 import '../../core/error/failures.dart';
@@ -6,7 +5,6 @@ import '../../domain/entities/user.dart';
 import '../../domain/entities/user_role.dart';
 import '../../domain/repositories/auth_repository.dart';
 
-@LazySingleton(as: AuthRepository)
 class MockAuthRepository implements AuthRepository {
   User? _currentUser;
 

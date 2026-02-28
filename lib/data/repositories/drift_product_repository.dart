@@ -1,0 +1,76 @@
+import '../../core/error/failures.dart';
+import '../../domain/entities/product.dart' as entity;
+import '../../domain/repositories/product_repository.dart';
+import '../drift/app_database.dart';
+import '../drift/daos/product_dao.dart';
+
+class DriftProductRepository implements ProductRepository {
+  final ProductDao _dao;
+
+  DriftProductRepository(this._dao);
+
+  @override
+  Future<Result<List<entity.Product>>> getProducts({
+    required String storeId,
+  }) async {
+    try {
+      final rows = await _dao.productsByStore(storeId);
+      final products = rows
+          .map((r) => entity.Product(
+                id: r.id,
+                name: r.name,
+                sku: r.sku,
+                price: r.price,
+                currencyCode: r.currencyCode,
+                category: r.category,
+                storeId: r.storeId,
+              ))
+          .toList();
+      return Success(products);
+    } catch (e) {
+      return Fail(CacheFailure(e.toString()));
+    }
+  }
+}
+
+/// Seeds the products table with initial data if empty.
+Future<void> seedProducts(ProductDao dao) async {
+  final existing = await dao.productsByStore('1');
+  if (existing.isNotEmpty) return;
+
+  const storeIds = ['1', '2', '3'];
+  final entries = <ProductsCompanion>[];
+
+  for (final storeId in storeIds) {
+    for (final p in _seedProducts) {
+      entries.add(ProductsCompanion.insert(
+        id: '${p.id}-$storeId',
+        name: p.name,
+        sku: p.sku,
+        price: p.price,
+        category: p.category,
+        storeId: storeId,
+      ));
+    }
+  }
+  await dao.upsertAll(entries);
+}
+
+const _seedProducts = [
+  // Beverages
+  (id: 'p1', name: 'Coca-Cola 500ml', sku: 'BEV-001', price: 1.50, category: 'Beverages'),
+  (id: 'p2', name: 'Mazoe Orange 2L', sku: 'BEV-002', price: 3.50, category: 'Beverages'),
+  (id: 'p3', name: 'Tanganda Tea 100g', sku: 'BEV-003', price: 2.20, category: 'Beverages'),
+  // Groceries
+  (id: 'p4', name: 'Lobels Bread White', sku: 'GRO-001', price: 1.80, category: 'Groceries'),
+  (id: 'p5', name: 'Sugar 2kg', sku: 'GRO-002', price: 3.00, category: 'Groceries'),
+  (id: 'p6', name: 'Cooking Oil 750ml', sku: 'GRO-003', price: 4.50, category: 'Groceries'),
+  (id: 'p7', name: 'Roller Meal 10kg', sku: 'GRO-004', price: 8.00, category: 'Groceries'),
+  // Snacks
+  (id: 'p8', name: 'Willards Chips 125g', sku: 'SNK-001', price: 1.20, category: 'Snacks'),
+  (id: 'p9', name: 'Bakers Biscuits', sku: 'SNK-002', price: 2.00, category: 'Snacks'),
+  // Electronics
+  (id: 'p10', name: 'USB-C Cable 1m', sku: 'ELE-001', price: 5.00, category: 'Electronics'),
+  (id: 'p11', name: 'Earphones Wired', sku: 'ELE-002', price: 3.50, category: 'Electronics'),
+  (id: 'p12', name: 'Power Bank 10000mAh', sku: 'ELE-003', price: 15.00, category: 'Electronics'),
+];

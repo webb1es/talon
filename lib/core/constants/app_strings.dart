@@ -87,6 +87,61 @@ class AppStrings {
   static const date = 'Date';
   static const cash = 'Cash';
 
+  // Reports
+  static const todaysSales = "Today's Sales";
+  static const totalSales = 'Total Sales';
+  static const transactionCount = 'Transactions';
+  static const totalTax = 'Tax Collected';
+  static const noTransactions = 'No transactions today';
+  static const refresh = 'Refresh';
+
+  // Landing
+  static const heroHeadline = 'Complete control.\nComplete confidence.';
+  static const heroSubtitle =
+      'The POS system built for businesses that mean business.';
+  static const getStarted = 'Get Started';
+  static const learnMore = 'Learn More';
+  static const featurePos = 'Lightning-Fast POS';
+  static const featurePosDesc =
+      'Ring up sales in seconds. Built for speed, optimized for flow.';
+  static const featureOffline = 'Offline-First';
+  static const featureOfflineDesc =
+      'Works without internet. Syncs automatically when you reconnect.';
+  static const featureMultiStore = 'Multi-Store';
+  static const featureMultiStoreDesc =
+      'Manage multiple locations from a single dashboard.';
+  static const featureReports = 'Real-Time Reports';
+  static const featureReportsDesc =
+      'Sales, tax, and inventory data at your fingertips.';
+  static const featureThemes = 'Your Brand, Your Way';
+  static const featureThemesDesc =
+      'Three distinct themes — Predator, Precision, Strike — each in light and dark.';
+  static const featureSecurity = 'Role-Based Security';
+  static const featureSecurityDesc =
+      'Admin, manager, and cashier roles with granular access control.';
+  static const themeShowcase = 'Choose Your Edge';
+  static const ctaHeadline = 'Fast. Sharp. Easy.';
+  static const ctaSubtitle =
+      'Start selling in minutes. No setup fees. No contracts.';
+
+  // One-pager
+  static const onePager = 'Product Overview';
+  static const onePagerShare = 'Share';
+  static const onePagerBenefitSpeed = 'Sub-second checkout';
+  static const onePagerBenefitOffline = 'Works 100% offline — syncs when online';
+  static const onePagerBenefitMultiStore = 'Multi-store from one dashboard';
+  static const onePagerBenefitReports = 'Real-time sales and tax reports';
+  static const onePagerBenefitThemes = 'Six branded theme variations';
+  static const onePagerBenefitSecurity = 'Role-based access control with RLS';
+  static const onePagerBenefitCurrency = 'Multi-currency with live exchange rates';
+  static const onePagerBenefitPlatform = 'Runs on mobile, tablet, desktop, and web';
+  static const onePagerWhy = 'Why Talon?';
+  static const onePagerWhyBody =
+      'Talon is built for businesses that need speed, reliability, and control. '
+      'No internet? No problem. Every transaction is stored locally and synced '
+      'automatically. Manage one store or twenty — same app, same simplicity.';
+  static const onePagerContact = 'mytalon.co.zw';
+
   // Navigation
   static const pos = 'POS';
   static const inventory = 'Inventory';
