@@ -109,6 +109,8 @@ class _ReportBody extends StatelessWidget {
   Widget build(BuildContext context) {
     final cubit = context.read<ReportCubit>();
     final isMobile = MediaQuery.sizeOf(context).width < 600;
+    final storeState = context.watch<StoreCubit>().state;
+    final currencyCode = storeState is StoreSelected ? storeState.store.currencyCode : 'USD';
 
     return Column(
       children: [
@@ -146,7 +148,7 @@ class _ReportBody extends StatelessWidget {
             ),
           ),
         const SizedBox(height: 8),
-        SummaryCards(state: state, crossAxisCount: isMobile ? 1 : 3),
+        SummaryCards(state: state, crossAxisCount: isMobile ? 1 : 3, currencyCode: currencyCode),
         if (state.transactions.isEmpty)
           Expanded(
             child: Center(
@@ -162,7 +164,7 @@ class _ReportBody extends StatelessWidget {
           Expanded(
             child: ListView(
               children: [
-                CashierBreakdown(data: state.salesByCashier),
+                CashierBreakdown(data: state.salesByCashier, currencyCode: currencyCode),
                 ...state.transactions.map((t) => TransactionTile(transaction: t)),
               ],
             ),

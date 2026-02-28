@@ -1,20 +1,37 @@
 import 'package:flutter/material.dart';
 
+import '../../../core/di/injection.dart';
+import '../../../core/services/exchange_rate_service.dart';
+import '../../../core/utils/currency_formatter.dart';
 import '../../../domain/entities/product.dart';
 
 class ProductCard extends StatelessWidget {
   final Product product;
+  final String currencyCode;
   final VoidCallback onTap;
 
-  const ProductCard({super.key, required this.product, required this.onTap});
+  const ProductCard({
+    super.key,
+    required this.product,
+    required this.onTap,
+    this.currencyCode = 'USD',
+  });
 
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final colors = theme.colorScheme;
 
+    final displayPrice = getIt<ExchangeRateService>()
+            .convert(product.price, 'USD', currencyCode) ??
+        product.price;
+    final priceText = formatCurrency(
+      displayPrice,
+      displayPrice == product.price ? 'USD' : currencyCode,
+    );
+
     return Semantics(
-      label: '${product.name}, ${product.currencyCode} ${product.price.toStringAsFixed(2)}',
+      label: '${product.name}, $priceText',
       button: true,
       child: Card(
         child: InkWell(
@@ -42,7 +59,7 @@ class ProductCard extends StatelessWidget {
                 ),
                 const SizedBox(height: 8),
                 Text(
-                  '\$${product.price.toStringAsFixed(2)}',
+                  priceText,
                   style: theme.textTheme.titleMedium?.copyWith(
                     color: colors.primary,
                     fontWeight: FontWeight.w700,

@@ -1,11 +1,15 @@
 import 'package:flutter/material.dart';
 
 import '../../../core/constants/app_strings.dart';
+import '../../../core/di/injection.dart';
+import '../../../core/services/exchange_rate_service.dart';
+import '../../../core/utils/currency_formatter.dart';
 
 class CashierBreakdown extends StatelessWidget {
   final List<({String name, double sales, int count})> data;
+  final String currencyCode;
 
-  const CashierBreakdown({super.key, required this.data});
+  const CashierBreakdown({super.key, required this.data, this.currencyCode = 'USD'});
 
   @override
   Widget build(BuildContext context) {
@@ -44,7 +48,10 @@ class CashierBreakdown extends StatelessWidget {
                 ),
                 const SizedBox(width: 12),
                 Text(
-                  '\$${entry.sales.toStringAsFixed(2)}',
+                  formatCurrency(
+                    getIt<ExchangeRateService>().convert(entry.sales, 'USD', currencyCode) ?? entry.sales,
+                    currencyCode,
+                  ),
                   style: theme.textTheme.bodyMedium?.copyWith(
                     fontWeight: FontWeight.w600,
                   ),

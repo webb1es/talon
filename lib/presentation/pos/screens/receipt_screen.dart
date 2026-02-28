@@ -3,6 +3,9 @@ import 'package:intl/intl.dart';
 import 'package:printing/printing.dart';
 
 import '../../../core/constants/app_strings.dart';
+import '../../../core/di/injection.dart';
+import '../../../core/services/exchange_rate_service.dart';
+import '../../../core/utils/currency_formatter.dart';
 import '../../../domain/entities/store.dart';
 import '../../../domain/entities/transaction.dart';
 import '../widgets/receipt_pdf.dart';
@@ -38,10 +41,14 @@ class _ReceiptContent extends StatelessWidget {
 
   const _ReceiptContent({required this.transaction, required this.store});
 
+  double _toDisplay(double usdAmount) =>
+      getIt<ExchangeRateService>().convert(usdAmount, 'USD', transaction.currencyCode) ?? usdAmount;
+
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final dateFormat = DateFormat('yyyy-MM-dd HH:mm');
+    final code = transaction.currencyCode;
 
     return SingleChildScrollView(
       padding: const EdgeInsets.all(24),
@@ -79,7 +86,7 @@ class _ReceiptContent extends StatelessWidget {
                     ),
                   ),
                   Text(
-                    '\$${item.lineTotal.toStringAsFixed(2)}',
+                    formatCurrency(_toDisplay(item.lineTotal), code),
                     style: theme.textTheme.bodyMedium,
                   ),
                 ],
@@ -89,15 +96,15 @@ class _ReceiptContent extends StatelessWidget {
           const Divider(),
 
           // Totals
-          SummaryRow(label: AppStrings.subtotal, value: transaction.subtotal),
+          SummaryRow(label: AppStrings.subtotal, value: _toDisplay(transaction.subtotal), currencyCode: code),
           const SizedBox(height: 4),
-          SummaryRow(label: AppStrings.tax, value: transaction.taxAmount),
+          SummaryRow(label: AppStrings.tax, value: _toDisplay(transaction.taxAmount), currencyCode: code),
           const Divider(),
-          SummaryRow(label: AppStrings.total, value: transaction.total, bold: true),
+          SummaryRow(label: AppStrings.total, value: _toDisplay(transaction.total), currencyCode: code, bold: true),
           const Divider(),
           const SizedBox(height: 4),
-          SummaryRow(label: AppStrings.cash, value: transaction.amountTendered),
-          SummaryRow(label: AppStrings.change, value: transaction.change),
+          SummaryRow(label: AppStrings.cash, value: _toDisplay(transaction.amountTendered), currencyCode: code),
+          SummaryRow(label: AppStrings.change, value: _toDisplay(transaction.change), currencyCode: code),
           const SizedBox(height: 24),
 
           // Actions

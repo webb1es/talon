@@ -1,6 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 
+import '../../../core/di/injection.dart';
+import '../../../core/services/exchange_rate_service.dart';
+import '../../../core/utils/currency_formatter.dart';
 import '../../../domain/entities/transaction.dart';
 
 class TransactionTile extends StatelessWidget {
@@ -39,7 +42,10 @@ class TransactionTile extends StatelessWidget {
             ),
           ),
           Text(
-            '\$${transaction.total.toStringAsFixed(2)}',
+            formatCurrency(
+              getIt<ExchangeRateService>().convert(transaction.total, 'USD', transaction.currencyCode) ?? transaction.total,
+              transaction.currencyCode,
+            ),
             style: theme.textTheme.titleMedium?.copyWith(
               fontWeight: FontWeight.w600,
             ),

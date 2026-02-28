@@ -174,8 +174,11 @@ class _InventoryBody extends StatelessWidget {
                   itemCount: state.filtered.length,
                   itemBuilder: (context, i) {
                     final product = state.filtered[i];
+                    final storeState = context.read<StoreCubit>().state;
+                    final currencyCode = storeState is StoreSelected ? storeState.store.currencyCode : 'USD';
                     return InventoryItemTile(
                       product: product,
+                      currencyCode: currencyCode,
                       onTap: () => onAdjust(product),
                     );
                   },

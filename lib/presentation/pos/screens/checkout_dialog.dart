@@ -4,7 +4,9 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 
 import '../../../core/constants/app_strings.dart';
 import '../../../core/di/injection.dart';
+import '../../../core/services/exchange_rate_service.dart';
 import '../../../core/theme/theme_cubit.dart';
+import '../../../core/utils/currency_formatter.dart';
 import '../../../domain/entities/cart_item.dart';
 import '../../../domain/entities/transaction.dart';
 import '../../../domain/entities/user.dart';
@@ -53,9 +55,18 @@ class _CheckoutContent extends StatefulWidget {
 
 class _CheckoutContentState extends State<_CheckoutContent> {
   final _cashController = TextEditingController();
+  final _exchangeRate = getIt<ExchangeRateService>();
   late final double _taxAmount = widget.subtotal * CheckoutCubit.taxRate;
-  late final double _total = widget.subtotal + _taxAmount;
+  late final double _totalUsd = widget.subtotal + _taxAmount;
   double _cashEntered = 0;
+
+  String get _currencyCode {
+    final storeState = context.read<StoreCubit>().state;
+    return storeState is StoreSelected ? storeState.store.currencyCode : 'USD';
+  }
+
+  double _toDisplay(double usdAmount) =>
+      _exchangeRate.convert(usdAmount, 'USD', _currencyCode) ?? usdAmount;
 
   @override
   void initState() {
@@ -73,8 +84,9 @@ class _CheckoutContentState extends State<_CheckoutContent> {
     super.dispose();
   }
 
-  bool get _canConfirm => _cashEntered >= _total;
-  double get _change => _cashEntered - _total;
+  double get _displayTotal => _toDisplay(_totalUsd);
+  bool get _canConfirm => _cashEntered >= _displayTotal;
+  double get _change => _cashEntered - _displayTotal;
 
   void _confirm() {
     final authState = context.read<AuthCubit>().state;
@@ -85,13 +97,17 @@ class _CheckoutContentState extends State<_CheckoutContent> {
         : const User(id: '', email: '', name: 'Unknown', role: UserRole.cashier);
     final storeId = storeState is StoreSelected ? storeState.store.id : '';
 
+    // Convert display-currency tendered amount back to USD for storage
+    final tenderedUsd =
+        _exchangeRate.convert(_cashEntered, _currencyCode, 'USD') ?? _cashEntered;
+
     context.read<CheckoutCubit>().processPayment(
       items: widget.items,
-      amountTendered: _cashEntered,
+      amountTendered: tenderedUsd,
       storeId: storeId,
       cashierId: user.id,
       cashierName: user.name,
-      currencyCode: 'USD',
+      currencyCode: _currencyCode,
     );
   }
 
@@ -118,19 +134,19 @@ class _CheckoutContentState extends State<_CheckoutContent> {
           children: [
             Text(AppStrings.checkout, style: theme.textTheme.headlineSmall),
             const SizedBox(height: 24),
-            SummaryRow(label: AppStrings.subtotal, value: widget.subtotal),
+            SummaryRow(label: AppStrings.subtotal, value: _toDisplay(widget.subtotal), currencyCode: _currencyCode),
             const SizedBox(height: 8),
-            SummaryRow(label: AppStrings.tax, value: _taxAmount),
+            SummaryRow(label: AppStrings.tax, value: _toDisplay(_taxAmount), currencyCode: _currencyCode),
             const Divider(height: 24),
-            SummaryRow(label: AppStrings.total, value: _total, bold: true),
+            SummaryRow(label: AppStrings.total, value: _displayTotal, currencyCode: _currencyCode, bold: true),
             const SizedBox(height: 24),
             Semantics(
               label: AppStrings.cashTendered,
               child: TextFormField(
                 controller: _cashController,
-                decoration: const InputDecoration(
+                decoration: InputDecoration(
                   labelText: AppStrings.cashTendered,
-                  prefixText: '\$ ',
+                  prefixText: currencySymbol(_currencyCode),
                 ),
                 keyboardType: const TextInputType.numberWithOptions(decimal: true),
                 inputFormatters: [
@@ -144,6 +160,7 @@ class _CheckoutContentState extends State<_CheckoutContent> {
               SummaryRow(
                 label: AppStrings.change,
                 value: _change,
+                currencyCode: _currencyCode,
                 bold: true,
                 color: _canConfirm ? null : theme.colorScheme.error,
               ),

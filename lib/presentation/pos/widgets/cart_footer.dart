@@ -1,12 +1,19 @@
 import 'package:flutter/material.dart';
 
 import '../../../core/constants/app_strings.dart';
+import '../../../core/utils/currency_formatter.dart';
 
 class CartFooter extends StatelessWidget {
   final double subtotal;
+  final String currencyCode;
   final VoidCallback? onCheckout;
 
-  const CartFooter({super.key, required this.subtotal, this.onCheckout});
+  const CartFooter({
+    super.key,
+    required this.subtotal,
+    this.currencyCode = 'USD',
+    this.onCheckout,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -21,7 +28,7 @@ class CartFooter extends StatelessWidget {
             children: [
               Text(AppStrings.subtotal, style: theme.textTheme.titleSmall),
               Text(
-                '\$${subtotal.toStringAsFixed(2)}',
+                formatCurrency(subtotal, currencyCode),
                 style: theme.textTheme.titleMedium?.copyWith(
                   fontWeight: FontWeight.w700,
                 ),

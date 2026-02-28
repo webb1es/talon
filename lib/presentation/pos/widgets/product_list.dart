@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 
 import '../../../core/constants/app_strings.dart';
 import '../../../domain/entities/product.dart';
 import '../../common/search_field.dart';
+import '../../store/bloc/store_cubit.dart';
 import 'product_card.dart';
 
 /// Product list with category filter chips and responsive grid.
@@ -47,6 +49,8 @@ class _ProductListState extends State<ProductList> {
   Widget build(BuildContext context) {
     final categories = widget.products.map((p) => p.category).toSet().toList()..sort();
     final filtered = _filtered;
+    final storeState = context.watch<StoreCubit>().state;
+    final currencyCode = storeState is StoreSelected ? storeState.store.currencyCode : 'USD';
 
     return Column(
       children: [
@@ -100,6 +104,7 @@ class _ProductListState extends State<ProductList> {
                   itemCount: filtered.length,
                   itemBuilder: (context, index) => ProductCard(
                     product: filtered[index],
+                    currencyCode: currencyCode,
                     onTap: () => widget.onProductTap(filtered[index]),
                   ),
                 ),

@@ -152,6 +152,9 @@ class AppStrings {
       'automatically. Manage one store or twenty — same app, same simplicity.';
   static const onePagerContact = 'mytalon.co.zw';
 
+  // Currency
+  static const currency = 'Currency';
+
   // Settings
   static const account = 'Account';
   static const theme = 'Theme';

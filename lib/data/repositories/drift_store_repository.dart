@@ -1,3 +1,5 @@
+import 'package:drift/drift.dart';
+
 import '../../core/error/failures.dart';
 import '../../domain/entities/store.dart' as entity;
 import '../../domain/repositories/store_repository.dart';
@@ -14,7 +16,12 @@ class DriftStoreRepository implements StoreRepository {
     try {
       final rows = await _dao.allStores();
       final stores = rows
-          .map((r) => entity.Store(id: r.id, name: r.name, address: r.address))
+          .map((r) => entity.Store(
+                id: r.id,
+                name: r.name,
+                address: r.address,
+                currencyCode: r.currencyCode,
+              ))
           .toList();
       return Success(stores);
     } catch (e) {
@@ -31,6 +38,6 @@ Future<void> seedStores(StoreDao dao) async {
   await dao.upsertAll([
     StoresCompanion.insert(id: '1', name: 'Downtown Branch', address: '12 Samora Machel Ave, Harare'),
     StoresCompanion.insert(id: '2', name: 'Mall Outlet', address: '45 Jason Moyo St, Bulawayo'),
-    StoresCompanion.insert(id: '3', name: 'Airport Kiosk', address: 'Terminal 2, RGM Airport'),
+    StoresCompanion.insert(id: '3', name: 'Airport Kiosk', address: 'Terminal 2, RGM Airport', currencyCode: const Value('ZWG')),
   ]);
 }

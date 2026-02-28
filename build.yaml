@@ -15,6 +15,7 @@ targets:
         generate_for:
           include:
             - lib/core/di/**.dart
+            - lib/core/services/**.dart
             - lib/data/**.dart
             - lib/presentation/**.dart
       drift_dev:

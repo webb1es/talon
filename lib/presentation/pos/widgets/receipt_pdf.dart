@@ -5,6 +5,9 @@ import 'package:pdf/pdf.dart';
 import 'package:pdf/widgets.dart' as pw;
 import 'package:printing/printing.dart';
 
+import '../../../core/di/injection.dart';
+import '../../../core/services/exchange_rate_service.dart';
+import '../../../core/utils/currency_formatter.dart';
 import '../../../domain/entities/store.dart';
 import '../../../domain/entities/transaction.dart';
 
@@ -12,6 +15,9 @@ import '../../../domain/entities/transaction.dart';
 Future<Uint8List> buildReceiptPdf(Transaction txn, Store store) async {
   final pdf = pw.Document();
   final dateFormat = DateFormat('yyyy-MM-dd HH:mm');
+  final code = txn.currencyCode;
+  final exchange = getIt<ExchangeRateService>();
+  double toDisplay(double usd) => exchange.convert(usd, 'USD', code) ?? usd;
 
   final font = await PdfGoogleFonts.robotoRegular();
   final fontBold = await PdfGoogleFonts.robotoBold();
@@ -56,7 +62,7 @@ Future<Uint8List> buildReceiptPdf(Transaction txn, Store store) async {
                   ),
                 ),
                 pw.Text(
-                  '\$${item.lineTotal.toStringAsFixed(2)}',
+                  formatCurrency(toDisplay(item.lineTotal), code),
                   style: const pw.TextStyle(fontSize: 9),
                 ),
               ],
@@ -68,17 +74,17 @@ Future<Uint8List> buildReceiptPdf(Transaction txn, Store store) async {
           pw.SizedBox(height: 4),
 
           // Totals
-          _totalRow('Subtotal', txn.subtotal),
-          _totalRow('Tax (${(txn.taxRate * 100).toStringAsFixed(0)}%)', txn.taxAmount),
+          _totalRow('Subtotal', toDisplay(txn.subtotal), code),
+          _totalRow('Tax (${(txn.taxRate * 100).toStringAsFixed(0)}%)', toDisplay(txn.taxAmount), code),
           pw.SizedBox(height: 4),
           _divider(),
-          _totalRow('TOTAL', txn.total, bold: true),
+          _totalRow('TOTAL', toDisplay(txn.total), code, bold: true),
           _divider(),
           pw.SizedBox(height: 4),
 
           // Payment
-          _totalRow('Cash', txn.amountTendered),
-          _totalRow('Change', txn.change),
+          _totalRow('Cash', toDisplay(txn.amountTendered), code),
+          _totalRow('Change', toDisplay(txn.change), code),
           pw.SizedBox(height: 8),
           _divider(),
           pw.SizedBox(height: 8),
@@ -108,7 +114,7 @@ pw.Widget _metaRow(String label, String value) => pw.Row(
       ],
     );
 
-pw.Widget _totalRow(String label, double value, {bool bold = false}) {
+pw.Widget _totalRow(String label, double value, String currencyCode, {bool bold = false}) {
   final style = pw.TextStyle(
     fontSize: bold ? 11 : 9,
     fontWeight: bold ? pw.FontWeight.bold : null,
@@ -119,7 +125,7 @@ pw.Widget _totalRow(String label, double value, {bool bold = false}) {
       mainAxisAlignment: pw.MainAxisAlignment.spaceBetween,
       children: [
         pw.Text(label, style: style),
-        pw.Text('\$${value.toStringAsFixed(2)}', style: style),
+        pw.Text(formatCurrency(value, currencyCode), style: style),
       ],
     ),
   );

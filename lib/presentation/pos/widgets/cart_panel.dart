@@ -2,6 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
 import '../../../core/constants/app_strings.dart';
+import '../../../core/di/injection.dart';
+import '../../../core/services/exchange_rate_service.dart';
+import '../../../core/utils/currency_formatter.dart';
 import '../../../domain/entities/cart_item.dart';
 import '../../store/bloc/store_cubit.dart';
 import '../bloc/cart_cubit.dart';
@@ -17,6 +20,8 @@ class CartPanel extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final storeState = context.watch<StoreCubit>().state;
+    final currencyCode = storeState is StoreSelected ? storeState.store.currencyCode : 'USD';
 
     return BlocBuilder<CartCubit, CartState>(
       builder: (context, state) {
@@ -31,6 +36,9 @@ class CartPanel extends StatelessWidget {
           );
         }
 
+        final exchangeRate = getIt<ExchangeRateService>();
+        final displaySubtotal = exchangeRate.convert(state.subtotal, 'USD', currencyCode) ?? state.subtotal;
+
         return Column(
           children: [
             _CartHeader(itemCount: state.itemCount),
@@ -40,12 +48,13 @@ class CartPanel extends StatelessWidget {
                 padding: const EdgeInsets.symmetric(vertical: 8),
                 itemCount: state.items.length,
                 itemBuilder: (context, index) =>
-                    _CartItemTile(item: state.items[index]),
+                    _CartItemTile(item: state.items[index], currencyCode: currencyCode),
               ),
             ),
             const Divider(height: 1),
             CartFooter(
-              subtotal: state.subtotal,
+              subtotal: displaySubtotal,
+              currencyCode: displaySubtotal == state.subtotal ? 'USD' : currencyCode,
               onCheckout: () async {
                 final txn = await showCheckoutDialog(context);
                 if (txn != null && context.mounted) {
@@ -97,13 +106,18 @@ class _CartHeader extends StatelessWidget {
 
 class _CartItemTile extends StatelessWidget {
   final CartItem item;
+  final String currencyCode;
 
-  const _CartItemTile({required this.item});
+  const _CartItemTile({required this.item, this.currencyCode = 'USD'});
 
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final lineTotal = item.product.price * item.quantity;
+    final displayTotal = getIt<ExchangeRateService>()
+            .convert(lineTotal, 'USD', currencyCode) ??
+        lineTotal;
+    final effectiveCode = displayTotal == lineTotal ? 'USD' : currencyCode;
 
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
@@ -120,7 +134,7 @@ class _CartItemTile extends StatelessWidget {
                   overflow: TextOverflow.ellipsis,
                 ),
                 Text(
-                  '\$${lineTotal.toStringAsFixed(2)}',
+                  formatCurrency(displayTotal, effectiveCode),
                   style: theme.textTheme.bodySmall?.copyWith(
                     color: theme.colorScheme.onSurfaceVariant,
                   ),

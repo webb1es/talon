@@ -1,8 +1,11 @@
 import 'package:flutter/material.dart';
 
+import '../../../core/utils/currency_formatter.dart';
+
 class SummaryRow extends StatelessWidget {
   final String label;
   final double value;
+  final String currencyCode;
   final bool bold;
   final Color? color;
 
@@ -10,6 +13,7 @@ class SummaryRow extends StatelessWidget {
     super.key,
     required this.label,
     required this.value,
+    this.currencyCode = 'USD',
     this.bold = false,
     this.color,
   });
@@ -24,7 +28,7 @@ class SummaryRow extends StatelessWidget {
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
       children: [
         Text(label, style: style),
-        Text('\$${value.toStringAsFixed(2)}', style: style),
+        Text(formatCurrency(value, currencyCode), style: style),
       ],
     );
   }

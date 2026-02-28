@@ -1,24 +1,32 @@
 import 'package:flutter/material.dart';
 
 import '../../../core/constants/app_strings.dart';
+import '../../../core/di/injection.dart';
+import '../../../core/services/exchange_rate_service.dart';
+import '../../../core/utils/currency_formatter.dart';
 import '../bloc/report_cubit.dart';
 
 class SummaryCards extends StatelessWidget {
   final ReportLoaded state;
   final int crossAxisCount;
+  final String currencyCode;
 
   const SummaryCards({
     super.key,
     required this.state,
     required this.crossAxisCount,
+    this.currencyCode = 'USD',
   });
 
   @override
   Widget build(BuildContext context) {
+    final exchange = getIt<ExchangeRateService>();
+    double toDisplay(double usd) => exchange.convert(usd, 'USD', currencyCode) ?? usd;
+
     final cards = [
-      _SummaryData(AppStrings.totalSales, '\$${state.totalSales.toStringAsFixed(2)}'),
+      _SummaryData(AppStrings.totalSales, formatCurrency(toDisplay(state.totalSales), currencyCode)),
       _SummaryData(AppStrings.transactionCount, '${state.transactionCount}'),
-      _SummaryData(AppStrings.totalTax, '\$${state.totalTax.toStringAsFixed(2)}'),
+      _SummaryData(AppStrings.totalTax, formatCurrency(toDisplay(state.totalTax), currencyCode)),
     ];
 
     return Padding(
