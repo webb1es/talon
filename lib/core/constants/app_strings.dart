@@ -47,6 +47,13 @@ class AppStrings {
   static const logout = 'Log out';
   static const email = 'Email';
   static const password = 'Password';
+  static const role = 'Role';
+  static const roleAdmin = 'Admin';
+  static const roleManager = 'Manager';
+  static const roleCashier = 'Cashier';
+  static const emailRequired = 'Email is required';
+  static const emailInvalid = 'Enter a valid email';
+  static const passwordRequired = 'Password is required';
 
   // Navigation
   static const pos = 'POS';
