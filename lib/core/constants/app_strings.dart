@@ -55,6 +55,10 @@ class AppStrings {
   static const emailInvalid = 'Enter a valid email';
   static const passwordRequired = 'Password is required';
 
+  // Store
+  static const selectStore = 'Select Store';
+  static const retry = 'Retry';
+
   // Navigation
   static const pos = 'POS';
   static const inventory = 'Inventory';

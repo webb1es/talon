@@ -6,6 +6,7 @@ import 'core/di/injection.dart';
 import 'core/router/app_router.dart';
 import 'core/theme/theme_cubit.dart';
 import 'presentation/auth/bloc/auth_cubit.dart';
+import 'presentation/store/bloc/store_cubit.dart';
 
 void main() {
   configureDependencies();
@@ -21,6 +22,7 @@ class TalonApp extends StatelessWidget {
       providers: [
         BlocProvider(create: (_) => ThemeCubit()),
         BlocProvider.value(value: getIt<AuthCubit>()),
+        BlocProvider.value(value: getIt<StoreCubit>()),
       ],
       child: BlocBuilder<ThemeCubit, ThemeState>(
         builder: (context, themeState) {

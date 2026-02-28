@@ -4,11 +4,14 @@ import '../../presentation/auth/bloc/auth_cubit.dart';
 import '../../presentation/auth/screens/login_screen.dart';
 import '../../presentation/common/app_shell.dart';
 import '../../presentation/common/placeholder_screen.dart';
+import '../../presentation/store/bloc/store_cubit.dart';
+import '../../presentation/store/screens/store_selector_screen.dart';
 import '../di/injection.dart';
 import 'go_router_refresh_stream.dart';
 
 abstract final class AppRoutes {
   static const login = '/login';
+  static const storeSelector = '/stores';
   static const pos = '/pos';
   static const inventory = '/inventory';
   static const reports = '/reports';
@@ -17,13 +20,24 @@ abstract final class AppRoutes {
 
 final router = GoRouter(
   initialLocation: AppRoutes.pos,
-  refreshListenable: GoRouterRefreshStream(getIt<AuthCubit>().stream),
+  refreshListenable: GoRouterRefreshStream([
+    getIt<AuthCubit>().stream,
+    getIt<StoreCubit>().stream,
+  ]),
   redirect: (context, state) {
     final isLoggedIn = getIt<AuthCubit>().isAuthenticated;
-    final isLoginRoute = state.matchedLocation == AppRoutes.login;
+    final hasStore = getIt<StoreCubit>().hasSelectedStore;
+    final location = state.matchedLocation;
 
-    if (!isLoggedIn && !isLoginRoute) return AppRoutes.login;
-    if (isLoggedIn && isLoginRoute) return AppRoutes.pos;
+    if (!isLoggedIn) {
+      return location == AppRoutes.login ? null : AppRoutes.login;
+    }
+    if (!hasStore) {
+      return location == AppRoutes.storeSelector ? null : AppRoutes.storeSelector;
+    }
+    if (location == AppRoutes.login || location == AppRoutes.storeSelector) {
+      return AppRoutes.pos;
+    }
     return null;
   },
   routes: [
@@ -31,6 +45,11 @@ final router = GoRouter(
       path: AppRoutes.login,
       name: 'login',
       builder: (context, state) => const LoginScreen(),
+    ),
+    GoRoute(
+      path: AppRoutes.storeSelector,
+      name: 'storeSelector',
+      builder: (context, state) => const StoreSelectorScreen(),
     ),
     StatefulShellRoute.indexedStack(
       builder: (context, state, navigationShell) =>

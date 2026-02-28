@@ -2,17 +2,21 @@ import 'dart:async';
 
 import 'package:flutter/foundation.dart';
 
-/// Adapts a [Stream] to a [Listenable] for GoRouter's refreshListenable.
+/// Adapts one or more [Stream]s to a [Listenable] for GoRouter's refreshListenable.
 class GoRouterRefreshStream extends ChangeNotifier {
-  GoRouterRefreshStream(Stream<dynamic> stream) {
-    _subscription = stream.asBroadcastStream().listen((_) => notifyListeners());
+  GoRouterRefreshStream(List<Stream<dynamic>> streams) {
+    for (final stream in streams) {
+      _subscriptions.add(stream.listen((_) => notifyListeners()));
+    }
   }
 
-  late final StreamSubscription<dynamic> _subscription;
+  final _subscriptions = <StreamSubscription<dynamic>>[];
 
   @override
   void dispose() {
-    _subscription.cancel();
+    for (final sub in _subscriptions) {
+      sub.cancel();
+    }
     super.dispose();
   }
 }
