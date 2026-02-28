@@ -1,6 +1,9 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 
+import '../../domain/entities/user_role.dart';
+import '../auth/bloc/auth_cubit.dart';
 import 'desktop_drawer.dart';
 import 'nav_destinations.dart';
 
@@ -11,11 +14,25 @@ class AppShell extends StatelessWidget {
 
   const AppShell({super.key, required this.navigationShell});
 
-  void _onTap(int index) =>
-      navigationShell.goBranch(index, initialLocation: index == navigationShell.currentIndex);
-
   @override
   Widget build(BuildContext context) {
+    final authState = context.watch<AuthCubit>().state;
+    final role = authState is Authenticated ? authState.user.role : UserRole.cashier;
+    final destinations = navDestinationsForRole(role);
+
+    // Map visible destination index to shell branch index
+    void onTap(int visibleIndex) {
+      final route = destinations[visibleIndex].route;
+      final branchIndex = allNavDestinations.indexWhere((d) => d.route == route);
+      navigationShell.goBranch(branchIndex,
+          initialLocation: branchIndex == navigationShell.currentIndex);
+    }
+
+    // Map current branch index to visible index
+    final currentRoute = allNavDestinations[navigationShell.currentIndex].route;
+    final visibleIndex = destinations.indexWhere((d) => d.route == currentRoute);
+    final safeIndex = visibleIndex.clamp(0, destinations.length - 1);
+
     final width = MediaQuery.sizeOf(context).width;
     final isMobile = width < 600;
     final isDesktop = width > 1024;
@@ -24,14 +41,26 @@ class AppShell extends StatelessWidget {
       body: Row(
         children: [
           if (isDesktop)
-            DesktopDrawer(selectedIndex: navigationShell.currentIndex, onTap: _onTap),
+            DesktopDrawer(
+              destinations: destinations,
+              selectedIndex: safeIndex,
+              onTap: onTap,
+            ),
           if (!isMobile && !isDesktop)
-            _TabletRail(selectedIndex: navigationShell.currentIndex, onTap: _onTap),
+            _TabletRail(
+              destinations: destinations,
+              selectedIndex: safeIndex,
+              onTap: onTap,
+            ),
           Expanded(child: navigationShell),
         ],
       ),
       bottomNavigationBar: isMobile
-          ? _MobileBottomNav(selectedIndex: navigationShell.currentIndex, onTap: _onTap)
+          ? _MobileBottomNav(
+              destinations: destinations,
+              selectedIndex: safeIndex,
+              onTap: onTap,
+            )
           : null,
     );
   }
@@ -40,10 +69,15 @@ class AppShell extends StatelessWidget {
 // -- Mobile: bottom navigation bar --
 
 class _MobileBottomNav extends StatelessWidget {
+  final List<NavDestination> destinations;
   final int selectedIndex;
   final ValueChanged<int> onTap;
 
-  const _MobileBottomNav({required this.selectedIndex, required this.onTap});
+  const _MobileBottomNav({
+    required this.destinations,
+    required this.selectedIndex,
+    required this.onTap,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -51,7 +85,7 @@ class _MobileBottomNav extends StatelessWidget {
       selectedIndex: selectedIndex,
       onDestinationSelected: onTap,
       destinations: [
-        for (final d in navDestinations)
+        for (final d in destinations)
           NavigationDestination(
             icon: Icon(d.icon),
             selectedIcon: Icon(d.selectedIcon),
@@ -65,10 +99,15 @@ class _MobileBottomNav extends StatelessWidget {
 // -- Tablet: navigation rail --
 
 class _TabletRail extends StatelessWidget {
+  final List<NavDestination> destinations;
   final int selectedIndex;
   final ValueChanged<int> onTap;
 
-  const _TabletRail({required this.selectedIndex, required this.onTap});
+  const _TabletRail({
+    required this.destinations,
+    required this.selectedIndex,
+    required this.onTap,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -77,7 +116,7 @@ class _TabletRail extends StatelessWidget {
       onDestinationSelected: onTap,
       labelType: NavigationRailLabelType.all,
       destinations: [
-        for (final d in navDestinations)
+        for (final d in destinations)
           NavigationRailDestination(
             icon: Icon(d.icon),
             selectedIcon: Icon(d.selectedIcon),

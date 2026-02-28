@@ -4,10 +4,16 @@ import '../../core/constants/app_strings.dart';
 import 'nav_destinations.dart';
 
 class DesktopDrawer extends StatelessWidget {
+  final List<NavDestination> destinations;
   final int selectedIndex;
   final ValueChanged<int> onTap;
 
-  const DesktopDrawer({super.key, required this.selectedIndex, required this.onTap});
+  const DesktopDrawer({
+    super.key,
+    required this.destinations,
+    required this.selectedIndex,
+    required this.onTap,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -30,12 +36,12 @@ class DesktopDrawer extends StatelessWidget {
             child: ListView(
               padding: const EdgeInsets.symmetric(vertical: 8),
               children: [
-                for (var i = 0; i < navDestinations.length; i++)
+                for (var i = 0; i < destinations.length; i++)
                   _DrawerItem(
                     icon: i == selectedIndex
-                        ? navDestinations[i].selectedIcon
-                        : navDestinations[i].icon,
-                    label: navDestinations[i].label,
+                        ? destinations[i].selectedIcon
+                        : destinations[i].icon,
+                    label: destinations[i].label,
                     selected: i == selectedIndex,
                     selectedColor: colors.primary,
                     onTap: () => onTap(i),
