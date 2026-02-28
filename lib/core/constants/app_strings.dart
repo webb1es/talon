@@ -142,6 +142,18 @@ class AppStrings {
       'automatically. Manage one store or twenty — same app, same simplicity.';
   static const onePagerContact = 'mytalon.co.zw';
 
+  // Settings
+  static const account = 'Account';
+  static const theme = 'Theme';
+  static const appearance = 'Appearance';
+  static const lightMode = 'Light';
+  static const darkMode = 'Dark';
+  static const predator = 'Predator';
+  static const precision = 'Precision';
+  static const strike = 'Strike';
+  static const switchStore = 'Switch Store';
+  static const logoutConfirm = 'Are you sure you want to log out?';
+
   // Navigation
   static const pos = 'POS';
   static const inventory = 'Inventory';

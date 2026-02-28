@@ -8,6 +8,7 @@ import '../../presentation/landing/screens/one_pager_screen.dart';
 import '../../presentation/common/placeholder_screen.dart';
 import '../../presentation/pos/screens/pos_screen.dart';
 import '../../presentation/reports/screens/reports_screen.dart';
+import '../../presentation/settings/screens/settings_screen.dart';
 import '../../presentation/store/bloc/store_cubit.dart';
 import '../../presentation/store/screens/store_selector_screen.dart';
 import '../di/injection.dart';
@@ -106,8 +107,7 @@ final router = GoRouter(
             GoRoute(
               path: AppRoutes.settings,
               name: 'settings',
-              builder: (context, state) =>
-                  const PlaceholderScreen(title: 'Settings'),
+              builder: (context, state) => const SettingsScreen(),
             ),
           ],
         ),
