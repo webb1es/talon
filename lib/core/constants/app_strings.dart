@@ -89,12 +89,21 @@ class AppStrings {
   static const cash = 'Cash';
 
   // Reports
+  static const salesReport = 'Sales Report';
   static const todaysSales = "Today's Sales";
   static const totalSales = 'Total Sales';
   static const transactionCount = 'Transactions';
   static const totalTax = 'Tax Collected';
-  static const noTransactions = 'No transactions today';
+  static const noTransactions = 'No transactions for this period';
   static const refresh = 'Refresh';
+  static const allCashiers = 'All cashiers';
+  static const salesByCashier = 'Sales by Cashier';
+  static const exportCsv = 'Export CSV';
+  static const today = 'Today';
+  static const last7Days = 'Last 7 days';
+  static const last30Days = 'Last 30 days';
+  static const customRange = 'Custom range';
+  static const selectDateRange = 'Select date range';
 
   // Landing
   static const heroHeadline = 'Complete control.\nComplete confidence.';

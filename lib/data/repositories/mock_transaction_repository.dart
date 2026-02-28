@@ -16,6 +16,8 @@ class MockTransactionRepository implements TransactionRepository {
   Future<Result<List<Transaction>>> getTransactions({
     required String storeId,
     DateTime? date,
+    DateTime? from,
+    DateTime? to,
   }) async {
     await Future<void>.delayed(const Duration(milliseconds: 300));
 

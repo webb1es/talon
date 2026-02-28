@@ -7,5 +7,7 @@ abstract class TransactionRepository {
   Future<Result<List<Transaction>>> getTransactions({
     required String storeId,
     DateTime? date,
+    DateTime? from,
+    DateTime? to,
   });
 }

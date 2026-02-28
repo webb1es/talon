@@ -54,9 +54,11 @@ class DriftTransactionRepository implements TransactionRepository {
   Future<Result<List<entity.Transaction>>> getTransactions({
     required String storeId,
     DateTime? date,
+    DateTime? from,
+    DateTime? to,
   }) async {
     try {
-      final rows = await _dao.transactionsByStore(storeId, date: date);
+      final rows = await _dao.transactionsByStore(storeId, date: date, from: from, to: to);
       final transactions = <entity.Transaction>[];
 
       for (final row in rows) {

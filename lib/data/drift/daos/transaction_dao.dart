@@ -24,6 +24,8 @@ class TransactionDao extends DatabaseAccessor<AppDatabase>
   Future<List<Transaction>> transactionsByStore(
     String storeId, {
     DateTime? date,
+    DateTime? from,
+    DateTime? to,
   }) {
     final query = select(transactions)
       ..where((t) => t.storeId.equals(storeId));
@@ -33,6 +35,14 @@ class TransactionDao extends DatabaseAccessor<AppDatabase>
       query
         ..where((t) => t.createdAt.isBiggerOrEqualValue(start))
         ..where((t) => t.createdAt.isSmallerThanValue(end));
+    } else {
+      if (from != null) {
+        query.where((t) => t.createdAt.isBiggerOrEqualValue(from));
+      }
+      if (to != null) {
+        final end = DateTime(to.year, to.month, to.day).add(const Duration(days: 1));
+        query.where((t) => t.createdAt.isSmallerThanValue(end));
+      }
     }
     query.orderBy([(t) => OrderingTerm.desc(t.createdAt)]);
     return query.get();
