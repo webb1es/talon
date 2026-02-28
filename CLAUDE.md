@@ -1,6 +1,6 @@
 # Talon™ POS — Build Rules
 
-**Project spec, features, brand identity, and architecture are in `prompt.yml`. Read it before building anything. This file governs HOW you write code.**
+**Project spec, features, brand identity, and architecture are in `PROMPT.md`. Read it before building anything. This file governs HOW you write code.**
 
 ## Stack
 
@@ -40,7 +40,7 @@ Bloc/Cubit only. No Provider, no setState for anything beyond trivial local widg
 - `json_serializable` for DTOs
 - Separate DTOs (data layer) from entities (domain layer)
 - Local DB: Drift (SQLite) — mirrors Supabase schema
-- Offline queue: Drift `sync_queue` table (see prompt.yml for schema)
+- Offline queue: Drift `sync_queue` table (see PROMPT.md for schema)
 
 ## Multi-Tenancy
 
@@ -67,7 +67,7 @@ Bloc/Cubit only. No Provider, no setState for anything beyond trivial local widg
 - Sync priority: transactions > inventory > products
 - Visual sync status indicator in UI
 - Manual retry option for failed items
-- Conflict resolution per entity type (see prompt.yml)
+- Conflict resolution per entity type (see PROMPT.md)
 
 ## Realtime
 
@@ -112,9 +112,9 @@ WCAG 2.1 AA minimum. Built in, not bolted on.
 
 ## Branding
 
-All brand values (colors, typography, component specs, voice) are in `prompt.yml` under `brand_identity`. That is the single source of truth.
+All brand values (colors, typography, component specs, voice) are in `PROMPT.md` under `brand_identity`. That is the single source of truth.
 
-- Implement all 6 theme variations (3 themes x light/dark) with exact hex codes from prompt.yml
+- Implement all 6 theme variations (3 themes x light/dark) with exact hex codes from PROMPT.md
 - ThemeCubit handles switching. Theme selector in settings.
 - ALL UI copy must match the active theme's brand voice (app_strings.dart)
 - "Talon™" — use ™ on first mention per screen
