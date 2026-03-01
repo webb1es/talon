@@ -1,23 +1,28 @@
 import 'package:drift/drift.dart';
 
 import '../app_database.dart';
+import '../tables/payment_entry_table.dart';
 import '../tables/transaction_item_table.dart';
 import '../tables/transaction_table.dart';
 
 part 'transaction_dao.g.dart';
 
-@DriftAccessor(tables: [Transactions, TransactionItems])
+@DriftAccessor(tables: [Transactions, TransactionItems, PaymentEntries])
 class TransactionDao extends DatabaseAccessor<AppDatabase>
     with _$TransactionDaoMixin {
   TransactionDao(super.db);
 
   Future<void> insertFullTransaction(
     TransactionsCompanion txn,
-    List<TransactionItemsCompanion> items,
-  ) async {
+    List<TransactionItemsCompanion> items, {
+    List<PaymentEntriesCompanion> payments = const [],
+  }) async {
     await batch((b) {
       b.insert(transactions, txn);
       b.insertAll(transactionItems, items);
+      if (payments.isNotEmpty) {
+        b.insertAll(paymentEntries, payments);
+      }
     });
   }
 
@@ -50,6 +55,13 @@ class TransactionDao extends DatabaseAccessor<AppDatabase>
 
   Future<List<TransactionItem>> itemsForTransaction(String transactionId) =>
       (select(transactionItems)
+            ..where((t) => t.transactionId.equals(transactionId)))
+          .get();
+
+  Future<List<PaymentEntry>> paymentEntriesForTransaction(
+    String transactionId,
+  ) =>
+      (select(paymentEntries)
             ..where((t) => t.transactionId.equals(transactionId)))
           .get();
 }

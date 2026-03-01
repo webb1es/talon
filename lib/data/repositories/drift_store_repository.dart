@@ -20,10 +20,30 @@ class DriftStoreRepository implements StoreRepository {
                 id: r.id,
                 name: r.name,
                 address: r.address,
-                currencyCode: r.currencyCode,
+                defaultCurrencyCode: r.currencyCode,
+                supportedCurrencies: r.supportedCurrencies.split(','),
               ))
           .toList();
       return Success(stores);
+    } catch (e) {
+      return Fail(CacheFailure(e.toString()));
+    }
+  }
+
+  @override
+  Future<Result<void>> updateStoreSettings(
+    String storeId, {
+    List<String>? supportedCurrencies,
+    String? defaultCurrencyCode,
+  }) async {
+    try {
+      if (supportedCurrencies != null) {
+        await _dao.updateSupportedCurrencies(storeId, supportedCurrencies.join(','));
+      }
+      if (defaultCurrencyCode != null) {
+        await _dao.updateDefaultCurrency(storeId, defaultCurrencyCode);
+      }
+      return const Success(null);
     } catch (e) {
       return Fail(CacheFailure(e.toString()));
     }
@@ -36,8 +56,24 @@ Future<void> seedStores(StoreDao dao) async {
   if (existing.isNotEmpty) return;
 
   await dao.upsertAll([
-    StoresCompanion.insert(id: '1', name: 'Downtown Branch', address: '12 Samora Machel Ave, Harare'),
-    StoresCompanion.insert(id: '2', name: 'Mall Outlet', address: '45 Jason Moyo St, Bulawayo'),
-    StoresCompanion.insert(id: '3', name: 'Airport Kiosk', address: 'Terminal 2, RGM Airport', currencyCode: const Value('ZWG')),
+    StoresCompanion.insert(
+      id: '1',
+      name: 'Downtown Branch',
+      address: '12 Samora Machel Ave, Harare',
+      supportedCurrencies: const Value('USD,ZWG'),
+    ),
+    StoresCompanion.insert(
+      id: '2',
+      name: 'Mall Outlet',
+      address: '45 Jason Moyo St, Bulawayo',
+      supportedCurrencies: const Value('USD,ZWG'),
+    ),
+    StoresCompanion.insert(
+      id: '3',
+      name: 'Airport Kiosk',
+      address: 'Terminal 2, RGM Airport',
+      currencyCode: const Value('ZWG'),
+      supportedCurrencies: const Value('USD,ZWG'),
+    ),
   ]);
 }

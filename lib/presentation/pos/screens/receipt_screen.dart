@@ -6,6 +6,7 @@ import '../../../core/constants/app_strings.dart';
 import '../../../core/di/injection.dart';
 import '../../../core/services/exchange_rate_service.dart';
 import '../../../core/utils/currency_formatter.dart';
+import '../../../domain/entities/payment_method.dart';
 import '../../../domain/entities/store.dart';
 import '../../../domain/entities/transaction.dart';
 import '../widgets/receipt_pdf.dart';
@@ -49,6 +50,7 @@ class _ReceiptContent extends StatelessWidget {
     final theme = Theme.of(context);
     final dateFormat = DateFormat('yyyy-MM-dd HH:mm');
     final code = transaction.currencyCode;
+    final hasPayments = transaction.payments.isNotEmpty;
 
     return SingleChildScrollView(
       padding: const EdgeInsets.all(24),
@@ -103,8 +105,21 @@ class _ReceiptContent extends StatelessWidget {
           SummaryRow(label: AppStrings.total, value: _toDisplay(transaction.total), currencyCode: code, bold: true),
           const Divider(),
           const SizedBox(height: 4),
-          SummaryRow(label: AppStrings.cash, value: _toDisplay(transaction.amountTendered), currencyCode: code),
-          SummaryRow(label: AppStrings.change, value: _toDisplay(transaction.change), currencyCode: code),
+
+          // Payment lines
+          if (hasPayments) ...[
+            for (final p in transaction.payments)
+              _MetaRow(
+                label: p.method == PaymentMethod.cash
+                    ? AppStrings.cashMethod
+                    : AppStrings.mobileMoneyMethod,
+                value: formatCurrency(p.amount, p.currencyCode),
+              ),
+          ] else ...[
+            SummaryRow(label: AppStrings.cash, value: _toDisplay(transaction.amountTendered), currencyCode: code),
+          ],
+          if (transaction.change > 0)
+            SummaryRow(label: AppStrings.change, value: _toDisplay(transaction.change), currencyCode: code),
           const SizedBox(height: 24),
 
           // Actions

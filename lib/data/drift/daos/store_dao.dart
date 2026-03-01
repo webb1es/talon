@@ -21,4 +21,12 @@ class StoreDao extends DatabaseAccessor<AppDatabase> with _$StoreDaoMixin {
       }
     });
   }
+
+  Future<void> updateSupportedCurrencies(String storeId, String csv) =>
+      (update(stores)..where((s) => s.id.equals(storeId)))
+          .write(StoresCompanion(supportedCurrencies: Value(csv)));
+
+  Future<void> updateDefaultCurrency(String storeId, String code) =>
+      (update(stores)..where((s) => s.id.equals(storeId)))
+          .write(StoresCompanion(currencyCode: Value(code)));
 }

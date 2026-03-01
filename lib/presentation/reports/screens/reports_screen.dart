@@ -10,6 +10,7 @@ import '../../store/bloc/store_cubit.dart';
 import '../bloc/report_cubit.dart';
 import '../widgets/cashier_breakdown.dart';
 import '../widgets/date_range_chips.dart';
+import '../widgets/payment_method_breakdown.dart';
 import '../widgets/summary_cards.dart';
 import '../widgets/transaction_tile.dart';
 
@@ -110,7 +111,7 @@ class _ReportBody extends StatelessWidget {
     final cubit = context.read<ReportCubit>();
     final isMobile = MediaQuery.sizeOf(context).width < 600;
     final storeState = context.watch<StoreCubit>().state;
-    final currencyCode = storeState is StoreSelected ? storeState.store.currencyCode : 'USD';
+    final currencyCode = storeState is StoreSelected ? storeState.store.defaultCurrencyCode : 'USD';
 
     return Column(
       children: [
@@ -165,6 +166,7 @@ class _ReportBody extends StatelessWidget {
             child: ListView(
               children: [
                 CashierBreakdown(data: state.salesByCashier, currencyCode: currencyCode),
+                PaymentMethodBreakdown(data: state.salesByPaymentMethod, currencyCode: currencyCode),
                 ...state.transactions.map((t) => TransactionTile(transaction: t)),
               ],
             ),

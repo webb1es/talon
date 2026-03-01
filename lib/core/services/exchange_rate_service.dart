@@ -2,10 +2,9 @@ import 'package:injectable/injectable.dart';
 
 /// Converts amounts between supported currencies.
 /// Rates are relative to USD (base currency).
-/// Hardcoded for now; swap implementation via DI when live rates are needed.
 @lazySingleton
 class ExchangeRateService {
-  static const _rates = <String, double>{
+  final Map<String, double> _rates = {
     'USD': 1.0,
     'ZWG': 28.0,
   };
@@ -20,4 +19,21 @@ class ExchangeRateService {
     if (fromRate == null || toRate == null) return null;
     return amount * (toRate / fromRate);
   }
+
+  /// Returns the rate for [code] relative to USD, or null if unknown.
+  double? rateFor(String code) => _rates[code];
+
+  /// Sets the rate for a single currency.
+  void setRate(String code, double rate) => _rates[code] = rate;
+
+  /// Replaces all rates. USD is always pinned at 1.0.
+  void setRates(Map<String, double> rates) {
+    _rates
+      ..clear()
+      ..addAll(rates)
+      ..['USD'] = 1.0;
+  }
+
+  /// All currency codes with known rates.
+  List<String> get availableCurrencies => _rates.keys.toList();
 }

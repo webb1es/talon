@@ -5,9 +5,11 @@ import 'package:pdf/pdf.dart';
 import 'package:pdf/widgets.dart' as pw;
 import 'package:printing/printing.dart';
 
+import '../../../core/constants/app_strings.dart';
 import '../../../core/di/injection.dart';
 import '../../../core/services/exchange_rate_service.dart';
 import '../../../core/utils/currency_formatter.dart';
+import '../../../domain/entities/payment_method.dart';
 import '../../../domain/entities/store.dart';
 import '../../../domain/entities/transaction.dart';
 
@@ -18,13 +20,15 @@ Future<Uint8List> buildReceiptPdf(Transaction txn, Store store) async {
   final code = txn.currencyCode;
   final exchange = getIt<ExchangeRateService>();
   double toDisplay(double usd) => exchange.convert(usd, 'USD', code) ?? usd;
+  final hasPayments = txn.payments.isNotEmpty;
 
   final font = await PdfGoogleFonts.robotoRegular();
   final fontBold = await PdfGoogleFonts.robotoBold();
   final theme = pw.ThemeData.withFont(base: font, bold: fontBold);
 
-  // Fixed sections ~220pt + ~14pt per line item + 32pt margins.
-  final pageHeight = 250.0 + txn.items.length * 14.0;
+  // Fixed sections ~220pt + ~14pt per line item + payment lines + 32pt margins.
+  final paymentLines = hasPayments ? txn.payments.length : 1;
+  final pageHeight = 250.0 + txn.items.length * 14.0 + paymentLines * 14.0;
 
   pdf.addPage(
     pw.Page(
@@ -83,8 +87,17 @@ Future<Uint8List> buildReceiptPdf(Transaction txn, Store store) async {
           pw.SizedBox(height: 4),
 
           // Payment
-          _totalRow('Cash', toDisplay(txn.amountTendered), code),
-          _totalRow('Change', toDisplay(txn.change), code),
+          if (hasPayments)
+            for (final p in txn.payments)
+              _metaRow(
+                p.method == PaymentMethod.cash
+                    ? AppStrings.cashMethod
+                    : AppStrings.mobileMoneyMethod,
+                formatCurrency(p.amount, p.currencyCode),
+              )
+          else
+            _totalRow('Cash', toDisplay(txn.amountTendered), code),
+          if (txn.change > 0) _totalRow('Change', toDisplay(txn.change), code),
           pw.SizedBox(height: 8),
           _divider(),
           pw.SizedBox(height: 8),

@@ -9,6 +9,7 @@ import 'daos/product_dao.dart';
 import 'daos/store_dao.dart';
 import 'daos/sync_queue_dao.dart';
 import 'daos/transaction_dao.dart';
+import 'tables/payment_entry_table.dart';
 import 'tables/product_table.dart';
 import 'tables/store_table.dart';
 import 'tables/sync_queue_table.dart';
@@ -18,14 +19,14 @@ import 'tables/transaction_table.dart';
 part 'app_database.g.dart';
 
 @DriftDatabase(
-  tables: [Stores, Products, Transactions, TransactionItems, SyncQueue],
+  tables: [Stores, Products, Transactions, TransactionItems, SyncQueue, PaymentEntries],
   daos: [StoreDao, ProductDao, TransactionDao, SyncQueueDao],
 )
 class AppDatabase extends _$AppDatabase {
   AppDatabase() : super(_openConnection());
 
   @override
-  int get schemaVersion => 4;
+  int get schemaVersion => 5;
 
   @override
   MigrationStrategy get migration => MigrationStrategy(
@@ -39,6 +40,17 @@ class AppDatabase extends _$AppDatabase {
       }
       if (from < 4) {
         await m.addColumn(stores, stores.currencyCode);
+      }
+      if (from < 5) {
+        await m.createTable(paymentEntries);
+        await m.addColumn(stores, stores.supportedCurrencies);
+        // Backfill: create payment entries for existing transactions
+        await customStatement('''
+          INSERT INTO payment_entries (transaction_id, method, currency_code, amount, amount_in_base_currency, exchange_rate)
+          SELECT id, 'cash', currency_code, amount_tendered, amount_tendered, 1.0
+          FROM transactions
+          WHERE amount_tendered > 0
+        ''');
       }
     },
   );

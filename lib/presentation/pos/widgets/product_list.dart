@@ -50,7 +50,7 @@ class _ProductListState extends State<ProductList> {
     final categories = widget.products.map((p) => p.category).toSet().toList()..sort();
     final filtered = _filtered;
     final storeState = context.watch<StoreCubit>().state;
-    final currencyCode = storeState is StoreSelected ? storeState.store.currencyCode : 'USD';
+    final currencyCode = storeState is StoreSelected ? storeState.store.defaultCurrencyCode : 'USD';
 
     return Column(
       children: [

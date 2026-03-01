@@ -154,6 +154,19 @@ class AppStrings {
 
   // Currency
   static const currency = 'Currency';
+  static const cashMethod = 'Cash';
+  static const mobileMoneyMethod = 'Mobile Money';
+  static const addPayment = 'Add Payment';
+  static const removePayment = 'Remove';
+  static const remainingBalance = 'Remaining';
+  static const paymentAmount = 'Amount';
+  static const currencySettings = 'Currency Settings';
+  static const supportedCurrencies = 'Supported Currencies';
+  static const exchangeRates = 'Exchange Rates';
+  static const defaultCurrency = 'Default Currency';
+  static const rateLabel = 'Rate (to USD)';
+  static const currencySaved = 'Currency settings saved';
+  static const salesByPaymentMethod = 'Sales by Payment Method';
 
   // Settings
   static const account = 'Account';

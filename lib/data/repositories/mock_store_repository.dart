@@ -8,9 +8,34 @@ class MockStoreRepository implements StoreRepository {
     await Future<void>.delayed(const Duration(milliseconds: 500));
 
     return const Success([
-      Store(id: '1', name: 'Downtown Branch', address: '12 Samora Machel Ave, Harare'),
-      Store(id: '2', name: 'Mall Outlet', address: '45 Jason Moyo St, Bulawayo'),
-      Store(id: '3', name: 'Airport Kiosk', address: 'Terminal 2, RGM Airport'),
+      Store(
+        id: '1',
+        name: 'Downtown Branch',
+        address: '12 Samora Machel Ave, Harare',
+        supportedCurrencies: ['USD', 'ZWG'],
+      ),
+      Store(
+        id: '2',
+        name: 'Mall Outlet',
+        address: '45 Jason Moyo St, Bulawayo',
+        supportedCurrencies: ['USD', 'ZWG'],
+      ),
+      Store(
+        id: '3',
+        name: 'Airport Kiosk',
+        address: 'Terminal 2, RGM Airport',
+        supportedCurrencies: ['USD', 'ZWG'],
+      ),
     ]);
+  }
+
+  @override
+  Future<Result<void>> updateStoreSettings(
+    String storeId, {
+    List<String>? supportedCurrencies,
+    String? defaultCurrencyCode,
+  }) async {
+    await Future<void>.delayed(const Duration(milliseconds: 300));
+    return const Success(null);
   }
 }

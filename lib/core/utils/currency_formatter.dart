@@ -5,6 +5,10 @@
 const _symbols = <String, String>{
   'USD': '\$',
   'ZWG': 'ZWG ',
+  'ZAR': 'R',
+  'BWP': 'P',
+  'EUR': '\u20AC',
+  'GBP': '\u00A3',
 };
 
 /// Returns the display symbol/prefix for [code].

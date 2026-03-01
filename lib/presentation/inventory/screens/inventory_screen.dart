@@ -175,7 +175,7 @@ class _InventoryBody extends StatelessWidget {
                   itemBuilder: (context, i) {
                     final product = state.filtered[i];
                     final storeState = context.read<StoreCubit>().state;
-                    final currencyCode = storeState is StoreSelected ? storeState.store.currencyCode : 'USD';
+                    final currencyCode = storeState is StoreSelected ? storeState.store.defaultCurrencyCode : 'USD';
                     return InventoryItemTile(
                       product: product,
                       currencyCode: currencyCode,

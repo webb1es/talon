@@ -8,6 +8,7 @@ abstract class Store with _$Store {
     required String id,
     required String name,
     required String address,
-    @Default('USD') String currencyCode,
+    @Default('USD') String defaultCurrencyCode,
+    @Default(['USD']) List<String> supportedCurrencies,
   }) = _Store;
 }

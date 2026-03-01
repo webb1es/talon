@@ -2,8 +2,12 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
 import '../../../core/constants/app_strings.dart';
+import '../../../core/di/injection.dart';
+import '../../../domain/repositories/store_repository.dart';
 import '../../auth/bloc/auth_cubit.dart';
 import '../../store/bloc/store_cubit.dart';
+import '../bloc/currency_settings_cubit.dart';
+import '../widgets/currency_settings.dart';
 import '../widgets/theme_selector.dart';
 
 class SettingsScreen extends StatelessWidget {
@@ -11,12 +15,21 @@ class SettingsScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final storeState = context.watch<StoreCubit>().state;
+    final store = storeState is StoreSelected ? storeState.store : null;
+
     return Scaffold(
       appBar: AppBar(title: const Text(AppStrings.settings)),
       body: ListView(
         children: [
           _AccountSection(),
           const Divider(height: 32),
+          if (store != null)
+            BlocProvider(
+              create: (_) => CurrencySettingsCubit(getIt<StoreRepository>())..load(store),
+              child: CurrencySettings(storeId: store.id),
+            ),
+          if (store != null) const Divider(height: 32),
           const ThemeSelector(),
           const Divider(height: 32),
           _ActionsSection(),

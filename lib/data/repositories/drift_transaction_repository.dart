@@ -1,6 +1,8 @@
 import 'package:drift/drift.dart';
 
 import '../../core/error/failures.dart';
+import '../../domain/entities/payment_entry.dart' as entity;
+import '../../domain/entities/payment_method.dart';
 import '../../domain/entities/transaction.dart' as entity;
 import '../../domain/repositories/transaction_repository.dart';
 import '../drift/app_database.dart';
@@ -43,7 +45,18 @@ class DriftTransactionRepository implements TransactionRepository {
               ))
           .toList();
 
-      await _dao.insertFullTransaction(txnCompanion, itemCompanions);
+      final paymentCompanions = txn.payments
+          .map((p) => PaymentEntriesCompanion.insert(
+                transactionId: txn.id,
+                method: p.method.name,
+                currencyCode: p.currencyCode,
+                amount: p.amount,
+                amountInBaseCurrency: p.amountInBaseCurrency,
+                exchangeRate: p.exchangeRate,
+              ))
+          .toList();
+
+      await _dao.insertFullTransaction(txnCompanion, itemCompanions, payments: paymentCompanions);
       return Success(txn);
     } catch (e) {
       return Fail(CacheFailure(e.toString()));
@@ -74,6 +87,20 @@ class DriftTransactionRepository implements TransactionRepository {
                 ))
             .toList();
 
+        final paymentRows = await _dao.paymentEntriesForTransaction(row.id);
+        final payments = paymentRows
+            .map((p) => entity.PaymentEntry(
+                  method: PaymentMethod.values.firstWhere(
+                    (m) => m.name == p.method,
+                    orElse: () => PaymentMethod.cash,
+                  ),
+                  currencyCode: p.currencyCode,
+                  amount: p.amount,
+                  amountInBaseCurrency: p.amountInBaseCurrency,
+                  exchangeRate: p.exchangeRate,
+                ))
+            .toList();
+
         transactions.add(entity.Transaction(
           id: row.id,
           storeId: row.storeId,
@@ -88,6 +115,7 @@ class DriftTransactionRepository implements TransactionRepository {
           change: row.change,
           currencyCode: row.currencyCode,
           createdAt: row.createdAt,
+          payments: payments,
         ));
       }
 

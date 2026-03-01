@@ -21,7 +21,7 @@ class CartPanel extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final storeState = context.watch<StoreCubit>().state;
-    final currencyCode = storeState is StoreSelected ? storeState.store.currencyCode : 'USD';
+    final currencyCode = storeState is StoreSelected ? storeState.store.defaultCurrencyCode : 'USD';
 
     return BlocBuilder<CartCubit, CartState>(
       builder: (context, state) {

@@ -4,6 +4,7 @@ import 'package:uuid/uuid.dart';
 
 import '../../../core/error/failures.dart';
 import '../../../domain/entities/cart_item.dart';
+import '../../../domain/entities/payment_entry.dart';
 import '../../../domain/entities/transaction.dart';
 import '../../../domain/repositories/product_repository.dart';
 import '../../../domain/repositories/transaction_repository.dart';
@@ -46,7 +47,7 @@ class CheckoutCubit extends Cubit<CheckoutState> {
 
   Future<void> processPayment({
     required List<CartItem> items,
-    required double amountTendered,
+    required List<PaymentEntry> payments,
     required String storeId,
     required String cashierId,
     required String cashierName,
@@ -70,6 +71,12 @@ class CheckoutCubit extends Cubit<CheckoutState> {
     final taxAmount = subtotal * taxRate;
     final total = subtotal + taxAmount;
 
+    // Backward compat: derive amountTendered/change from payments
+    final totalPaidUsd =
+        payments.fold(0.0, (sum, p) => sum + p.amountInBaseCurrency);
+    final amountTendered = totalPaidUsd;
+    final change = totalPaidUsd - total;
+
     final transaction = Transaction(
       id: const Uuid().v4(),
       storeId: storeId,
@@ -81,9 +88,10 @@ class CheckoutCubit extends Cubit<CheckoutState> {
       taxAmount: taxAmount,
       total: total,
       amountTendered: amountTendered,
-      change: amountTendered - total,
+      change: change > 0 ? change : 0,
       currencyCode: currencyCode,
       createdAt: DateTime.now(),
+      payments: payments,
     );
 
     final result = await _transactionRepository.createTransaction(transaction);

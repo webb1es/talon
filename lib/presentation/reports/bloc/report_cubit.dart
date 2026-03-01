@@ -2,6 +2,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:injectable/injectable.dart';
 
 import '../../../core/error/failures.dart';
+import '../../../domain/entities/payment_method.dart';
 import '../../../domain/entities/transaction.dart';
 import '../../../domain/repositories/transaction_repository.dart';
 
@@ -55,6 +56,27 @@ class ReportLoaded extends ReportState {
     }
     return map.entries
         .map((e) => (name: e.key, sales: e.value.$1, count: e.value.$2))
+        .toList()
+      ..sort((a, b) => b.sales.compareTo(a.sales));
+  }
+
+  List<({String method, double sales, int count})> get salesByPaymentMethod {
+    final map = <String, (double, int)>{};
+    for (final t in transactions) {
+      if (t.payments.isNotEmpty) {
+        for (final p in t.payments) {
+          final label = p.method == PaymentMethod.cash ? 'Cash' : 'Mobile Money';
+          final (sales, count) = map[label] ?? (0.0, 0);
+          map[label] = (sales + p.amountInBaseCurrency, count + 1);
+        }
+      } else {
+        // Legacy transactions without payment entries
+        final (sales, count) = map['Cash'] ?? (0.0, 0);
+        map['Cash'] = (sales + t.amountTendered, count + 1);
+      }
+    }
+    return map.entries
+        .map((e) => (method: e.key, sales: e.value.$1, count: e.value.$2))
         .toList()
       ..sort((a, b) => b.sales.compareTo(a.sales));
   }
@@ -122,8 +144,14 @@ class ReportCubit extends Cubit<ReportState> {
     final current = state;
     if (current is! ReportLoaded) return '';
     final buf = StringBuffer()
-      ..writeln('ID,Date,Cashier,Items,Subtotal,Tax,Total');
+      ..writeln('ID,Date,Cashier,Items,Subtotal,Tax,Total,Payment Methods');
     for (final t in current.transactions) {
+      final paymentDesc = t.payments.isNotEmpty
+          ? t.payments
+              .map((p) =>
+                  '${p.method == PaymentMethod.cash ? "Cash" : "Mobile Money"} ${p.currencyCode} ${p.amount.toStringAsFixed(2)}')
+              .join(' + ')
+          : 'Cash ${t.currencyCode} ${t.amountTendered.toStringAsFixed(2)}';
       buf.writeln(
         '${t.id},'
         '${t.createdAt.toIso8601String()},'
@@ -131,7 +159,8 @@ class ReportCubit extends Cubit<ReportState> {
         '${t.items.length},'
         '${t.subtotal.toStringAsFixed(2)},'
         '${t.taxAmount.toStringAsFixed(2)},'
-        '${t.total.toStringAsFixed(2)}',
+        '${t.total.toStringAsFixed(2)},'
+        '"$paymentDesc"',
       );
     }
     return buf.toString();
