@@ -138,7 +138,6 @@ class _LoginScreenState extends State<LoginScreen> {
                       final isLoading = state is AuthLoading;
                       return SizedBox(
                         width: double.infinity,
-                        height: 48,
                         child: ElevatedButton(
                           onPressed: _isFormValid && !isLoading ? _submit : null,
                           child: isLoading

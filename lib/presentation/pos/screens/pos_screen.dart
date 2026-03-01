@@ -3,6 +3,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 
 import '../../../core/constants/app_strings.dart';
 import '../../../core/di/injection.dart';
+import '../../common/macos_toolbar.dart';
 import '../../store/bloc/store_cubit.dart';
 import '../../sync/widgets/sync_status_indicator.dart';
 import '../bloc/cart_cubit.dart';
@@ -66,8 +67,8 @@ class _PosViewState extends State<_PosView> {
     final isMobile = MediaQuery.sizeOf(context).width < 600;
 
     return Scaffold(
-      appBar: AppBar(
-        title: Text(storeName),
+      appBar: MacosToolbar(
+        title: storeName,
         actions: const [SyncStatusIndicator()],
       ),
       body: BlocBuilder<ProductCubit, ProductState>(
@@ -86,8 +87,15 @@ class _PosViewState extends State<_PosView> {
                         onProductTap: context.read<CartCubit>().addProduct,
                       ),
                     ),
-                    const VerticalDivider(width: 1),
-                    const SizedBox(width: 320, child: CartPanel()),
+                    const VerticalDivider(width: 0.5, thickness: 0.5),
+                    SizedBox(
+                      width: 320,
+                      child: ColoredBox(
+                        color: Theme.of(context).inputDecorationTheme.fillColor ??
+                            Theme.of(context).colorScheme.surfaceContainerLow,
+                        child: const CartPanel(),
+                      ),
+                    ),
                   ],
                 ),
           ProductError(:final failure) => Center(

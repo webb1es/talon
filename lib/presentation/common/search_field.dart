@@ -24,15 +24,34 @@ class SearchField extends StatelessWidget {
         controller: controller,
         decoration: InputDecoration(
           hintText: AppStrings.searchProducts,
-          prefixIcon: const Icon(Icons.search),
+          prefixIcon: const Icon(Icons.search, size: 18),
           suffixIcon: showClear
-              ? IconButton(
-                  icon: const Icon(Icons.clear),
-                  onPressed: onClear,
+              ? Semantics(
+                  label: 'Clear search',
+                  child: IconButton(
+                    icon: const Icon(Icons.close, size: 16),
+                    onPressed: onClear,
+                  ),
                 )
               : null,
           isDense: true,
-          border: const OutlineInputBorder(),
+          contentPadding:
+              const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+          border: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(20),
+            borderSide: BorderSide.none,
+          ),
+          enabledBorder: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(20),
+            borderSide: BorderSide.none,
+          ),
+          focusedBorder: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(20),
+            borderSide: BorderSide(
+              color: Theme.of(context).colorScheme.primary,
+              width: 1.5,
+            ),
+          ),
         ),
         onChanged: onChanged,
       ),

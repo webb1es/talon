@@ -201,10 +201,10 @@ WCAG 2.1 AA minimum. All 6 theme variations must independently pass.
 **Fonts:** Headlines = Montserrat (700, 600) · Body = Inter (400, 500, 600) · Monospace = JetBrains Mono (400, 500) for SKUs, barcodes, inventory numbers
 
 **Desktop sizes:**
-H1: 48px/700 · H2: 32px/700 · H3: 24px/600 · H4: 20px/600 · Body Large: 18px/400 · Body: 16px/400 · Body Small: 14px/400 · Caption: 12px/500/UPPERCASE · Button: 16px/600
+H1: 48px/700 · H2: 32px/700 · H3: 24px/Inter/600 · H4: 20px/Inter/500 · Body Large: 16px/400 · Body: 14px/400 · Body Small: 13px/400 · Caption: 12px/500 · Button: 14px/500
 
 **Mobile sizes:**
-H1: 32px · H2: 24px · H3: 20px · Body: 16px · Small: 14px
+H1: 32px · H2: 24px · H3: 20px · Body: 14px · Small: 13px
 
 ### Brand Voice
 
@@ -218,26 +218,35 @@ H1: 32px · H2: 24px · H3: 20px · Body: 16px · Small: 14px
 
 ### Components
 
-**Buttons:** Standard 48px height, 24px 32px padding, 4px radius. Small 36px height, 16px 24px padding.
+**Buttons:** Standard 32px visual height (44px tap target), 10px 20px padding, 8px radius, 0 elevation. Small 26px height, 6px 14px padding.
 - Primary: bg = theme primary, text = white
 - Secondary: 1px border theme primary, text = theme primary
 - Tertiary: text = theme text_primary, underline on hover
 
-**Cards:** 24px padding, surface bg, 1px solid border, 8px radius, no shadow
+**Cards:** 24px padding, surface bg, subtle shadow (blur 8, offset 2), 10px radius, no border
 
-**Inputs:** 48px height, 16px padding, 1px solid border, 2px solid primary on focus, 4px radius, caption label above
+**Inputs:** 28px visual height, 12px horizontal padding, filled surfaceSecondary bg, no outline border, 8px radius, 1.5px primary border on focus only
 
-**Tables:** Caption header on surface bg, 16px 24px cell padding, 1px solid border bottom, 5% primary opacity on hover
+**Tables:** Caption header on surface bg, 16px 24px cell padding, 0.5px hairline divider, 6% primary opacity on hover
 
 **Alerts:** 10% semantic color bg, 4px left border solid semantic color
 - Success ✓ · Warning ⚠ · Error ✗ · Info ℹ
 
+**Dialogs:** 16px radius, elevation 24, shadow blur 32
+
+**Toolbar (macOS):** 52px height, toolbarBackground, left-aligned Inter w500 title, bottom 0.5px hairline
+
+**Sidebar (macOS):** 220px width, sidebarBackground, 8px radius selection indicator with 12% primary opacity, 20px icons, 13px Inter labels
+
 ### Layout Principles
 
-- Sharp corners: 4px max radius (8px for cards only)
+- macOS visual language: smooth radii (6-16px), subtle shadows, frosted glass accents
+- Radii: small 6px, medium 8px, card 10px, large 12px, xl 16px
 - Whitespace: 16px/24px base increments
 - Data-forward: tables and numbers prominent
-- Flat design with intentional contrast
+- Compact density with generous touch targets (44px minimum)
+- Hover states on interactive elements (6% primary overlay)
+- 0.5px hairline dividers (10% opacity)
 
 ### Logo
 
@@ -428,7 +437,8 @@ Tags: `[MVP]` = golden path · `[CORE]` = required for phase · `[FUTURE]` = on 
 
 - [ ] Colors match active theme
 - [ ] Typography follows hierarchy (Montserrat/Inter/JetBrains Mono)
-- [ ] Spacing uses 16px/24px increments
+- [ ] Spacing uses 16px/24px increments, macOS compact density
+- [ ] Radii follow scale: 6/8/10/12/16px
 - [ ] Alerts use left border + 10% bg
 - [ ] UI copy matches active theme's brand voice
 - [ ] ™ on first Talon mention

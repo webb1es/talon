@@ -8,59 +8,59 @@ class AppTypography {
 
   static TextTheme textTheme(AppColors colors) {
     return TextTheme(
-      // H1: Montserrat 700
+      // H1: Montserrat 700 — landing/display only
       displayLarge: GoogleFonts.montserrat(
         fontSize: 48,
         fontWeight: FontWeight.w700,
         color: colors.textPrimary,
       ),
-      // H2: Montserrat 700
+      // H2: Montserrat 700 — landing/display only
       displayMedium: GoogleFonts.montserrat(
         fontSize: 32,
         fontWeight: FontWeight.w700,
         color: colors.textPrimary,
       ),
-      // H3: Montserrat 600
-      displaySmall: GoogleFonts.montserrat(
+      // H3: Inter 600
+      displaySmall: GoogleFonts.inter(
         fontSize: 24,
         fontWeight: FontWeight.w600,
         color: colors.textPrimary,
       ),
-      // H4: Montserrat 600
-      headlineMedium: GoogleFonts.montserrat(
+      // H4: Inter 500
+      headlineMedium: GoogleFonts.inter(
         fontSize: 20,
-        fontWeight: FontWeight.w600,
+        fontWeight: FontWeight.w500,
         color: colors.textPrimary,
       ),
       // Body Large: Inter 400
       bodyLarge: GoogleFonts.inter(
-        fontSize: 18,
+        fontSize: 16,
         fontWeight: FontWeight.w400,
         color: colors.textPrimary,
       ),
       // Body: Inter 400
       bodyMedium: GoogleFonts.inter(
-        fontSize: 16,
+        fontSize: 14,
         fontWeight: FontWeight.w400,
         color: colors.textPrimary,
       ),
       // Body Small: Inter 400
       bodySmall: GoogleFonts.inter(
-        fontSize: 14,
+        fontSize: 13,
         fontWeight: FontWeight.w400,
         color: colors.textSecondary,
       ),
-      // Caption: Inter 500 UPPERCASE (applied via style, not TextTheme)
+      // Caption: Inter 500
       labelSmall: GoogleFonts.inter(
         fontSize: 12,
         fontWeight: FontWeight.w500,
-        letterSpacing: 1.2,
+        letterSpacing: 0.5,
         color: colors.textSecondary,
       ),
-      // Button: Inter 600
+      // Button: Inter 500
       labelLarge: GoogleFonts.inter(
-        fontSize: 16,
-        fontWeight: FontWeight.w600,
+        fontSize: 14,
+        fontWeight: FontWeight.w500,
         color: colors.textPrimary,
       ),
     );

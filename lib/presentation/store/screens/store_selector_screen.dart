@@ -1,9 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
+import '../../../core/constants/app_spacing.dart';
 import '../../../core/constants/app_strings.dart';
 import '../../../core/theme/theme_cubit.dart';
 import '../../../domain/entities/store.dart';
+import '../../common/hover_highlight.dart';
 import '../bloc/store_cubit.dart';
 
 class StoreSelectorScreen extends StatefulWidget {
@@ -76,31 +78,35 @@ class _StoreList extends StatelessWidget {
       separatorBuilder: (_, _) => const SizedBox(height: 12),
       itemBuilder: (context, index) {
         final store = stores[index];
+        final cardRadius = BorderRadius.circular(AppSpacing.radiusCard);
         return Semantics(
           label: '${store.name}, ${store.address}',
           button: true,
-          child: Card(
-            child: InkWell(
-              borderRadius: BorderRadius.circular(8),
-              onTap: () => context.read<StoreCubit>().selectStore(store),
-              child: Padding(
-                padding: const EdgeInsets.all(24),
-                child: Row(
-                  children: [
-                    Icon(Icons.store_outlined, color: colors.primary),
-                    const SizedBox(width: 16),
-                    Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(store.name, style: theme.textTheme.titleMedium),
-                          const SizedBox(height: 4),
-                          Text(store.address, style: theme.textTheme.bodySmall),
-                        ],
+          child: HoverHighlight(
+            borderRadius: cardRadius,
+            child: Card(
+              child: InkWell(
+                borderRadius: cardRadius,
+                onTap: () => context.read<StoreCubit>().selectStore(store),
+                child: Padding(
+                  padding: const EdgeInsets.all(24),
+                  child: Row(
+                    children: [
+                      Icon(Icons.store_outlined, color: colors.primary),
+                      const SizedBox(width: 16),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(store.name, style: theme.textTheme.titleMedium),
+                            const SizedBox(height: 4),
+                            Text(store.address, style: theme.textTheme.bodySmall),
+                          ],
+                        ),
                       ),
-                    ),
-                    Icon(Icons.chevron_right, color: colors.onSurfaceVariant),
-                  ],
+                      Icon(Icons.chevron_right, color: colors.onSurfaceVariant),
+                    ],
+                  ),
                 ),
               ),
             ),

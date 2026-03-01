@@ -9,6 +9,7 @@ import '../../../core/constants/app_strings.dart';
 import '../../../core/di/injection.dart';
 import '../../../domain/entities/user_role.dart';
 import '../../auth/bloc/auth_cubit.dart';
+import '../../common/macos_toolbar.dart';
 import '../../common/search_field.dart';
 import '../../store/bloc/store_cubit.dart';
 import '../bloc/inventory_cubit.dart';
@@ -112,10 +113,8 @@ class _InventoryViewState extends State<_InventoryView> {
     final canWrite = role.canAdjustStock;
 
     return Scaffold(
-      appBar: AppBar(
-        title: Text(
-          canWrite ? AppStrings.inventory : '${AppStrings.inventory} — ${AppStrings.viewOnly}',
-        ),
+      appBar: MacosToolbar(
+        title: canWrite ? AppStrings.inventory : '${AppStrings.inventory} — ${AppStrings.viewOnly}',
         actions: [
           if (canWrite) ...[
             Semantics(

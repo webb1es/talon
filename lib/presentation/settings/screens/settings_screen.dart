@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
+import '../../../core/constants/app_spacing.dart';
 import '../../../core/constants/app_strings.dart';
 import '../../../core/di/injection.dart';
+import '../../common/macos_toolbar.dart';
 import '../../../domain/entities/user_role.dart';
 import '../../../domain/repositories/store_repository.dart';
 import '../../auth/bloc/auth_cubit.dart';
@@ -22,7 +24,7 @@ class SettingsScreen extends StatelessWidget {
     final role = authState is Authenticated ? authState.user.role : UserRole.cashier;
 
     return Scaffold(
-      appBar: AppBar(title: const Text(AppStrings.settings)),
+      appBar: const MacosToolbar(title: AppStrings.settings),
       body: ListView(
         children: [
           _AccountSection(),
@@ -121,7 +123,7 @@ class _Chip extends StatelessWidget {
       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
       decoration: BoxDecoration(
         color: theme.colorScheme.primary.withValues(alpha: 0.1),
-        borderRadius: BorderRadius.circular(4),
+        borderRadius: BorderRadius.circular(AppSpacing.radiusSmall),
       ),
       child: Text(
         label,

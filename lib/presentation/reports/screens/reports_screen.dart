@@ -6,6 +6,7 @@ import 'package:printing/printing.dart';
 
 import '../../../core/constants/app_strings.dart';
 import '../../../core/di/injection.dart';
+import '../../common/macos_toolbar.dart';
 import '../../store/bloc/store_cubit.dart';
 import '../bloc/report_cubit.dart';
 import '../widgets/cashier_breakdown.dart';
@@ -55,8 +56,8 @@ class _ReportsView extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: const Text(AppStrings.salesReport),
+      appBar: MacosToolbar(
+        title: AppStrings.salesReport,
         actions: [
           Semantics(
             label: AppStrings.exportCsv,

@@ -114,6 +114,8 @@ WCAG 2.1 AA minimum. Built in, not bolted on.
 
 All brand values (colors, typography, component specs, voice) are in `PROMPT.md` under `brand_identity`. That is the single source of truth.
 
+Visual language: macOS/Apple — smooth radii (6-16px), subtle shadows, frosted glass accents, compact density, hover states. Material widgets styled to look macOS-native (not Cupertino, not `macos_ui` package).
+
 - Implement all 6 theme variations (3 themes x light/dark) with exact hex codes from PROMPT.md
 - ThemeCubit handles switching. Theme selector in settings.
 - ALL UI copy must match the active theme's brand voice (app_strings.dart)

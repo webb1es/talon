@@ -9,7 +9,7 @@ import 'desktop_drawer.dart';
 import 'nav_destinations.dart';
 
 /// App shell with responsive navigation. Wraps all authenticated routes.
-/// Mobile (<600px): bottom nav · Tablet (600–1024px): rail · Desktop (>1024px): drawer.
+/// Mobile (<600px): bottom nav · Tablet (600-1024px): rail · Desktop (>1024px): drawer.
 class AppShell extends StatelessWidget {
   final StatefulNavigationShell navigationShell;
 
@@ -37,16 +37,24 @@ class AppShell extends StatelessWidget {
     final width = MediaQuery.sizeOf(context).width;
     final isMobile = width < 600;
     final isDesktop = width > 1024;
+    final dividerColor = Theme.of(context).dividerTheme.color ??
+        Theme.of(context).dividerColor;
 
     return Scaffold(
       body: Row(
         children: [
-          if (isDesktop)
+          if (isDesktop) ...[
             DesktopDrawer(
               destinations: destinations,
               selectedIndex: safeIndex,
               onTap: onTap,
             ),
+            VerticalDivider(
+              width: 0.5,
+              thickness: 0.5,
+              color: dividerColor,
+            ),
+          ],
           if (!isMobile && !isDesktop)
             _TabletRail(
               destinations: destinations,
@@ -57,10 +65,16 @@ class AppShell extends StatelessWidget {
         ],
       ),
       bottomNavigationBar: isMobile
-          ? _MobileBottomNav(
-              destinations: destinations,
-              selectedIndex: safeIndex,
-              onTap: onTap,
+          ? Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Divider(height: 0.5, thickness: 0.5, color: dividerColor),
+                _MobileBottomNav(
+                  destinations: destinations,
+                  selectedIndex: safeIndex,
+                  onTap: onTap,
+                ),
+              ],
             )
           : null,
     );
@@ -82,21 +96,16 @@ class _MobileBottomNav extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Column(
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        NavigationBar(
-          selectedIndex: selectedIndex,
-          onDestinationSelected: onTap,
-          destinations: [
-            for (final d in destinations)
-              NavigationDestination(
-                icon: Icon(d.icon),
-                selectedIcon: Icon(d.selectedIcon),
-                label: d.label,
-              ),
-          ],
-        ),
+    return NavigationBar(
+      selectedIndex: selectedIndex,
+      onDestinationSelected: onTap,
+      destinations: [
+        for (final d in destinations)
+          NavigationDestination(
+            icon: Icon(d.icon),
+            selectedIcon: Icon(d.selectedIcon),
+            label: d.label,
+          ),
       ],
     );
   }

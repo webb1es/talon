@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:printing/printing.dart';
 
 import '../../../core/constants/app_strings.dart';
+import '../../common/macos_toolbar.dart';
 import '../widgets/one_pager_pdf.dart';
 
 class OnePagerScreen extends StatelessWidget {
@@ -10,8 +11,8 @@ class OnePagerScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: const Text(AppStrings.onePager),
+      appBar: MacosToolbar(
+        title: AppStrings.onePager,
         actions: [
           Semantics(
             label: AppStrings.onePagerShare,
