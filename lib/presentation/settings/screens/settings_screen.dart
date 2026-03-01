@@ -3,6 +3,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 
 import '../../../core/constants/app_strings.dart';
 import '../../../core/di/injection.dart';
+import '../../../domain/entities/user_role.dart';
 import '../../../domain/repositories/store_repository.dart';
 import '../../auth/bloc/auth_cubit.dart';
 import '../../store/bloc/store_cubit.dart';
@@ -17,6 +18,8 @@ class SettingsScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     final storeState = context.watch<StoreCubit>().state;
     final store = storeState is StoreSelected ? storeState.store : null;
+    final authState = context.watch<AuthCubit>().state;
+    final role = authState is Authenticated ? authState.user.role : UserRole.cashier;
 
     return Scaffold(
       appBar: AppBar(title: const Text(AppStrings.settings)),
@@ -24,12 +27,12 @@ class SettingsScreen extends StatelessWidget {
         children: [
           _AccountSection(),
           const Divider(height: 32),
-          if (store != null)
+          if (store != null && role.canAccessCurrencySettings)
             BlocProvider(
               create: (_) => CurrencySettingsCubit(getIt<StoreRepository>())..load(store),
               child: CurrencySettings(storeId: store.id),
             ),
-          if (store != null) const Divider(height: 32),
+          if (store != null && role.canAccessCurrencySettings) const Divider(height: 32),
           const ThemeSelector(),
           const Divider(height: 32),
           _ActionsSection(),
@@ -134,22 +137,25 @@ class _ActionsSection extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final authState = context.watch<AuthCubit>().state;
+    final role = authState is Authenticated ? authState.user.role : UserRole.cashier;
 
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 16),
       child: Column(
         children: [
-          Semantics(
-            label: AppStrings.switchStore,
-            child: ListTile(
-              leading: const Icon(Icons.store),
-              title: const Text(AppStrings.switchStore),
-              trailing: const Icon(Icons.chevron_right),
-              onTap: () {
-                context.read<StoreCubit>().clearSelection();
-              },
+          if (role.canSwitchStore)
+            Semantics(
+              label: AppStrings.switchStore,
+              child: ListTile(
+                leading: const Icon(Icons.store),
+                title: const Text(AppStrings.switchStore),
+                trailing: const Icon(Icons.chevron_right),
+                onTap: () {
+                  context.read<StoreCubit>().clearSelection();
+                },
+              ),
             ),
-          ),
           Semantics(
             label: AppStrings.logout,
             child: ListTile(

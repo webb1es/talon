@@ -53,7 +53,6 @@ final router = GoRouter(
     if (authState is Authenticated) {
       final role = authState.user.role;
       final denied =
-          (location == AppRoutes.inventory && !role.canAccessInventory) ||
           (location == AppRoutes.reports && !role.canAccessReports) ||
           (location == AppRoutes.settings && !role.canAccessSettings);
       if (denied) return AppRoutes.pos;

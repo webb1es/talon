@@ -19,7 +19,6 @@ const List<NavDestination> allNavDestinations = [
 
 List<NavDestination> navDestinationsForRole(UserRole role) {
   return allNavDestinations.where((d) {
-    if (d.route == '/inventory') return role.canAccessInventory;
     if (d.route == '/reports') return role.canAccessReports;
     if (d.route == '/settings') return role.canAccessSettings;
     return true;

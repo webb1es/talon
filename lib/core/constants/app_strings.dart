@@ -191,6 +191,7 @@ class AppStrings {
   static const importCsv = 'Import CSV';
   static const importSuccess = 'products imported';
   static const importFailed = 'Import failed';
+  static const viewOnly = 'View only';
 
   // Sync
   static const syncing = 'Syncing...';

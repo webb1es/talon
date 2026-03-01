@@ -9,12 +9,12 @@ import 'stock_badge.dart';
 class InventoryItemTile extends StatelessWidget {
   final Product product;
   final String currencyCode;
-  final VoidCallback onTap;
+  final VoidCallback? onTap;
 
   const InventoryItemTile({
     super.key,
     required this.product,
-    required this.onTap,
+    this.onTap,
     this.currencyCode = 'USD',
   });
 

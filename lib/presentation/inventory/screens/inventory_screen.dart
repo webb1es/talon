@@ -7,6 +7,8 @@ import 'package:printing/printing.dart';
 
 import '../../../core/constants/app_strings.dart';
 import '../../../core/di/injection.dart';
+import '../../../domain/entities/user_role.dart';
+import '../../auth/bloc/auth_cubit.dart';
 import '../../common/search_field.dart';
 import '../../store/bloc/store_cubit.dart';
 import '../bloc/inventory_cubit.dart';
@@ -105,26 +107,34 @@ class _InventoryViewState extends State<_InventoryView> {
 
   @override
   Widget build(BuildContext context) {
+    final authState = context.watch<AuthCubit>().state;
+    final role = authState is Authenticated ? authState.user.role : UserRole.cashier;
+    final canWrite = role.canAdjustStock;
+
     return Scaffold(
       appBar: AppBar(
-        title: const Text(AppStrings.inventory),
+        title: Text(
+          canWrite ? AppStrings.inventory : '${AppStrings.inventory} — ${AppStrings.viewOnly}',
+        ),
         actions: [
-          Semantics(
-            label: AppStrings.exportCsv,
-            child: IconButton(
-              icon: const Icon(Icons.file_download_outlined),
-              tooltip: AppStrings.exportCsv,
-              onPressed: () => _exportCsv(context),
+          if (canWrite) ...[
+            Semantics(
+              label: AppStrings.exportCsv,
+              child: IconButton(
+                icon: const Icon(Icons.file_download_outlined),
+                tooltip: AppStrings.exportCsv,
+                onPressed: () => _exportCsv(context),
+              ),
             ),
-          ),
-          Semantics(
-            label: AppStrings.importCsv,
-            child: IconButton(
-              icon: const Icon(Icons.file_upload_outlined),
-              tooltip: AppStrings.importCsv,
-              onPressed: () => _importCsv(context),
+            Semantics(
+              label: AppStrings.importCsv,
+              child: IconButton(
+                icon: const Icon(Icons.file_upload_outlined),
+                tooltip: AppStrings.importCsv,
+                onPressed: () => _importCsv(context),
+              ),
             ),
-          ),
+          ],
           IconButton(
             icon: const Icon(Icons.refresh),
             tooltip: AppStrings.refresh,
@@ -150,7 +160,7 @@ class _InventoryViewState extends State<_InventoryView> {
             InventoryLoaded() => _InventoryBody(
                 state: state,
                 searchController: _searchController,
-                onAdjust: (p) => _adjustStock(context, p),
+                onAdjust: canWrite ? (p) => _adjustStock(context, p) : null,
               ),
             InventoryError(:final failure) => Center(
                 child: Column(
@@ -176,12 +186,12 @@ class _InventoryViewState extends State<_InventoryView> {
 class _InventoryBody extends StatelessWidget {
   final InventoryLoaded state;
   final TextEditingController searchController;
-  final ValueChanged<dynamic> onAdjust;
+  final ValueChanged<dynamic>? onAdjust;
 
   const _InventoryBody({
     required this.state,
     required this.searchController,
-    required this.onAdjust,
+    this.onAdjust,
   });
 
   @override
@@ -241,7 +251,7 @@ class _InventoryBody extends StatelessWidget {
                     return InventoryItemTile(
                       product: product,
                       currencyCode: currencyCode,
-                      onTap: () => onAdjust(product),
+                      onTap: onAdjust != null ? () => onAdjust!(product) : null,
                     );
                   },
                 ),
