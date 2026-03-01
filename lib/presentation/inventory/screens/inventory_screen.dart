@@ -1,5 +1,9 @@
+import 'dart:convert';
+
+import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:printing/printing.dart';
 
 import '../../../core/constants/app_strings.dart';
 import '../../../core/di/injection.dart';
@@ -52,6 +56,36 @@ class _InventoryViewState extends State<_InventoryView> {
     }
   }
 
+  Future<void> _exportCsv(BuildContext context) async {
+    final csv = context.read<InventoryCubit>().exportCsv();
+    if (csv.isEmpty) return;
+    await Printing.sharePdf(
+      bytes: utf8.encode(csv),
+      filename: 'products.csv',
+    );
+  }
+
+  Future<void> _importCsv(BuildContext context) async {
+    final result = await FilePicker.platform.pickFiles(
+      type: FileType.custom,
+      allowedExtensions: ['csv'],
+    );
+    if (result == null || result.files.isEmpty) return;
+    if (!context.mounted) return;
+
+    final bytes = result.files.first.bytes;
+    if (bytes == null) return;
+
+    final csvContent = utf8.decode(bytes);
+    final storeState = context.read<StoreCubit>().state;
+    if (storeState is! StoreSelected) return;
+
+    await context.read<InventoryCubit>().importCsv(
+          storeId: storeState.store.id,
+          csvContent: csvContent,
+        );
+  }
+
   Future<void> _adjustStock(BuildContext context, product) async {
     final newStock = await showDialog<int>(
       context: context,
@@ -75,6 +109,22 @@ class _InventoryViewState extends State<_InventoryView> {
       appBar: AppBar(
         title: const Text(AppStrings.inventory),
         actions: [
+          Semantics(
+            label: AppStrings.exportCsv,
+            child: IconButton(
+              icon: const Icon(Icons.file_download_outlined),
+              tooltip: AppStrings.exportCsv,
+              onPressed: () => _exportCsv(context),
+            ),
+          ),
+          Semantics(
+            label: AppStrings.importCsv,
+            child: IconButton(
+              icon: const Icon(Icons.file_upload_outlined),
+              tooltip: AppStrings.importCsv,
+              onPressed: () => _importCsv(context),
+            ),
+          ),
           IconButton(
             icon: const Icon(Icons.refresh),
             tooltip: AppStrings.refresh,
@@ -82,30 +132,42 @@ class _InventoryViewState extends State<_InventoryView> {
           ),
         ],
       ),
-      body: BlocBuilder<InventoryCubit, InventoryState>(
-        builder: (context, state) => switch (state) {
-          InventoryLoading() =>
-            const Center(child: CircularProgressIndicator()),
-          InventoryLoaded() => _InventoryBody(
-              state: state,
-              searchController: _searchController,
-              onAdjust: (p) => _adjustStock(context, p),
-            ),
-          InventoryError(:final failure) => Center(
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Text(failure.message),
-                  const SizedBox(height: 16),
-                  OutlinedButton(
-                    onPressed: _load,
-                    child: const Text(AppStrings.retry),
-                  ),
-                ],
-              ),
-            ),
-          _ => const SizedBox.shrink(),
+      body: BlocListener<InventoryCubit, InventoryState>(
+        listener: (context, state) {
+          if (state is InventoryImportResult) {
+            final msg = state.error != null
+                ? '${AppStrings.importFailed}: ${state.error}'
+                : '${state.count} ${AppStrings.importSuccess}';
+            ScaffoldMessenger.of(context)
+                .showSnackBar(SnackBar(content: Text(msg)));
+          }
         },
+        child: BlocBuilder<InventoryCubit, InventoryState>(
+          buildWhen: (_, current) => current is! InventoryImportResult,
+          builder: (context, state) => switch (state) {
+            InventoryLoading() =>
+              const Center(child: CircularProgressIndicator()),
+            InventoryLoaded() => _InventoryBody(
+                state: state,
+                searchController: _searchController,
+                onAdjust: (p) => _adjustStock(context, p),
+              ),
+            InventoryError(:final failure) => Center(
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Text(failure.message),
+                    const SizedBox(height: 16),
+                    OutlinedButton(
+                      onPressed: _load,
+                      child: const Text(AppStrings.retry),
+                    ),
+                  ],
+                ),
+              ),
+            _ => const SizedBox.shrink(),
+          },
+        ),
       ),
     );
   }

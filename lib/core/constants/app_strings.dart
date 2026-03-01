@@ -188,6 +188,9 @@ class AppStrings {
   static const stockRequired = 'Enter a quantity';
   static const save = 'Save';
   static const sku = 'SKU';
+  static const importCsv = 'Import CSV';
+  static const importSuccess = 'products imported';
+  static const importFailed = 'Import failed';
 
   // Sync
   static const syncing = 'Syncing...';

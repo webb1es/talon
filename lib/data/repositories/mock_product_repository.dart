@@ -14,6 +14,11 @@ class MockProductRepository implements ProductRepository {
   Future<Result<void>> updateStock({required String productId, required int stock}) async {
     return const Success(null);
   }
+
+  @override
+  Future<Result<void>> importProducts({required String storeId, required List<Product> products}) async {
+    return const Success(null);
+  }
 }
 
 const _mockProducts = [

@@ -40,6 +40,47 @@ class DriftProductRepository implements ProductRepository {
   }
 
   @override
+  Future<Result<void>> importProducts({
+    required String storeId,
+    required List<entity.Product> products,
+  }) async {
+    try {
+      final entries = products
+          .map((p) => ProductsCompanion.insert(
+                id: p.id,
+                name: p.name,
+                sku: p.sku,
+                price: p.price,
+                category: p.category,
+                storeId: storeId,
+                stock: Value(p.stock),
+              ))
+          .toList();
+      await _dao.upsertAll(entries);
+
+      for (final p in products) {
+        await _syncDao.enqueue(
+          entityTable: 'products',
+          recordId: p.id,
+          operation: 'upsert',
+          payload: jsonEncode({
+            'name': p.name,
+            'sku': p.sku,
+            'price': p.price,
+            'currency_code': p.currencyCode,
+            'category': p.category,
+            'stock': p.stock,
+          }),
+        );
+      }
+
+      return const Success(null);
+    } catch (e) {
+      return Fail(CacheFailure(e.toString()));
+    }
+  }
+
+  @override
   Future<Result<void>> updateStock({
     required String productId,
     required int stock,

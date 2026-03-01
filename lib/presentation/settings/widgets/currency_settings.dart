@@ -62,7 +62,9 @@ class CurrencySettings extends StatelessWidget {
               Semantics(
                 label: AppStrings.defaultCurrency,
                 child: DropdownButtonFormField<String>(
-                  initialValue: state.defaultCurrencyCode,
+                  initialValue: state.supportedCurrencies.contains(state.defaultCurrencyCode)
+                      ? state.defaultCurrencyCode
+                      : state.supportedCurrencies.first,
                   isExpanded: true,
                   decoration: const InputDecoration(
                     isDense: true,
