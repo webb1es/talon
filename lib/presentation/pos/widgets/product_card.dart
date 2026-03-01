@@ -58,7 +58,7 @@ class ProductCard extends StatelessWidget {
                   Text(
                     product.sku,
                     style: theme.textTheme.bodySmall?.copyWith(
-                      fontFamily: 'JetBrains Mono',
+                      fontFamily: 'Geist Mono',
                       color: colors.onSurfaceVariant,
                     ),
                   ),

@@ -3,7 +3,7 @@ import 'package:flutter/material.dart';
 import '../../core/constants/app_spacing.dart';
 
 /// macOS-style toolbar. Drop-in replacement for AppBar.
-/// Left-aligned title (Inter w500), actions area, bottom hairline border.
+/// Left-aligned title (Geist w500), actions area, bottom hairline border.
 class MacosToolbar extends StatelessWidget implements PreferredSizeWidget {
   final String title;
   final List<Widget> actions;

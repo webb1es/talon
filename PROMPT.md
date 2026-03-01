@@ -17,7 +17,7 @@ Talon™ is an offline-first, multi-store POS system. Flutter + Supabase. One co
 | State    | flutter_bloc / Cubit                                           |
 | DI       | get_it + injectable                                            |
 | Models   | freezed + json_serializable                                    |
-| Fonts    | google_fonts (Montserrat, Inter, JetBrains Mono)               |
+| Fonts    | google_fonts (Montserrat, Geist, Geist Mono)               |
 | Routing  | GoRouter                                                       |
 | Testing  | bloc_test, mocktail, integration_test                          |
 
@@ -198,10 +198,10 @@ WCAG 2.1 AA minimum. All 6 theme variations must independently pass.
 
 ### Typography
 
-**Fonts:** Headlines = Montserrat (700, 600) · Body = Inter (400, 500, 600) · Monospace = JetBrains Mono (400, 500) for SKUs, barcodes, inventory numbers
+**Fonts:** Headlines = Montserrat (700, 600) · Body = Geist (400, 500, 600) · Monospace = Geist Mono (400, 500) for SKUs, barcodes, inventory numbers
 
 **Desktop sizes:**
-H1: 48px/700 · H2: 32px/700 · H3: 24px/Inter/600 · H4: 20px/Inter/500 · Body Large: 16px/400 · Body: 14px/400 · Body Small: 13px/400 · Caption: 12px/500 · Button: 14px/500
+H1: 48px/700 · H2: 32px/700 · H3: 24px/Geist/600 · H4: 20px/Geist/500 · Body Large: 16px/400 · Body: 14px/400 · Body Small: 13px/400 · Caption: 12px/500 · Button: 14px/500
 
 **Mobile sizes:**
 H1: 32px · H2: 24px · H3: 20px · Body: 14px · Small: 13px
@@ -234,9 +234,9 @@ H1: 32px · H2: 24px · H3: 20px · Body: 14px · Small: 13px
 
 **Dialogs:** 16px radius, elevation 24, shadow blur 32
 
-**Toolbar (macOS):** 52px height, toolbarBackground, left-aligned Inter w500 title, bottom 0.5px hairline
+**Toolbar (macOS):** 52px height, toolbarBackground, left-aligned Geist w500 title, bottom 0.5px hairline
 
-**Sidebar (macOS):** 220px width, sidebarBackground, 8px radius selection indicator with 12% primary opacity, 20px icons, 13px Inter labels
+**Sidebar (macOS):** 220px width, sidebarBackground, 8px radius selection indicator with 12% primary opacity, 20px icons, 13px Geist labels
 
 ### Layout Principles
 
@@ -436,7 +436,7 @@ Tags: `[MVP]` = golden path · `[CORE]` = required for phase · `[FUTURE]` = on 
 ## Quality Checklist (per screen)
 
 - [ ] Colors match active theme
-- [ ] Typography follows hierarchy (Montserrat/Inter/JetBrains Mono)
+- [ ] Typography follows hierarchy (Montserrat/Geist/Geist Mono)
 - [ ] Spacing uses 16px/24px increments, macOS compact density
 - [ ] Radii follow scale: 6/8/10/12/16px
 - [ ] Alerts use left border + 10% bg
