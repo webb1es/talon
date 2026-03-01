@@ -4,6 +4,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import '../../../core/constants/app_strings.dart';
 import '../../../core/di/injection.dart';
 import '../../store/bloc/store_cubit.dart';
+import '../../sync/widgets/sync_status_indicator.dart';
 import '../bloc/cart_cubit.dart';
 import '../bloc/product_cubit.dart';
 import '../widgets/cart_panel.dart';
@@ -65,7 +66,10 @@ class _PosViewState extends State<_PosView> {
     final isMobile = MediaQuery.sizeOf(context).width < 600;
 
     return Scaffold(
-      appBar: AppBar(title: Text(storeName)),
+      appBar: AppBar(
+        title: Text(storeName),
+        actions: const [SyncStatusIndicator()],
+      ),
       body: BlocBuilder<ProductCubit, ProductState>(
         builder: (context, state) => switch (state) {
           ProductsLoading() => const Center(child: CircularProgressIndicator()),

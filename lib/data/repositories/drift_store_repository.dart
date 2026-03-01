@@ -1,3 +1,5 @@
+import 'dart:convert';
+
 import 'package:drift/drift.dart';
 
 import '../../core/error/failures.dart';
@@ -5,11 +7,13 @@ import '../../domain/entities/store.dart' as entity;
 import '../../domain/repositories/store_repository.dart';
 import '../drift/app_database.dart';
 import '../drift/daos/store_dao.dart';
+import '../drift/daos/sync_queue_dao.dart';
 
 class DriftStoreRepository implements StoreRepository {
   final StoreDao _dao;
+  final SyncQueueDao _syncDao;
 
-  DriftStoreRepository(this._dao);
+  DriftStoreRepository(this._dao, this._syncDao);
 
   @override
   Future<Result<List<entity.Store>>> getStores() async {
@@ -37,12 +41,26 @@ class DriftStoreRepository implements StoreRepository {
     String? defaultCurrencyCode,
   }) async {
     try {
+      final payload = <String, dynamic>{};
+
       if (supportedCurrencies != null) {
         await _dao.updateSupportedCurrencies(storeId, supportedCurrencies.join(','));
+        payload['supported_currencies'] = supportedCurrencies.join(',');
       }
       if (defaultCurrencyCode != null) {
         await _dao.updateDefaultCurrency(storeId, defaultCurrencyCode);
+        payload['currency_code'] = defaultCurrencyCode;
       }
+
+      if (payload.isNotEmpty) {
+        await _syncDao.enqueue(
+          entityTable: 'stores',
+          recordId: storeId,
+          operation: 'update',
+          payload: jsonEncode(payload),
+        );
+      }
+
       return const Success(null);
     } catch (e) {
       return Fail(CacheFailure(e.toString()));

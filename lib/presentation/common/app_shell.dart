@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 
 import '../../domain/entities/user_role.dart';
 import '../auth/bloc/auth_cubit.dart';
+import '../sync/widgets/sync_status_indicator.dart';
 import 'desktop_drawer.dart';
 import 'nav_destinations.dart';
 
@@ -81,16 +82,21 @@ class _MobileBottomNav extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return NavigationBar(
-      selectedIndex: selectedIndex,
-      onDestinationSelected: onTap,
-      destinations: [
-        for (final d in destinations)
-          NavigationDestination(
-            icon: Icon(d.icon),
-            selectedIcon: Icon(d.selectedIcon),
-            label: d.label,
-          ),
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        NavigationBar(
+          selectedIndex: selectedIndex,
+          onDestinationSelected: onTap,
+          destinations: [
+            for (final d in destinations)
+              NavigationDestination(
+                icon: Icon(d.icon),
+                selectedIcon: Icon(d.selectedIcon),
+                label: d.label,
+              ),
+          ],
+        ),
       ],
     );
   }
@@ -115,6 +121,15 @@ class _TabletRail extends StatelessWidget {
       selectedIndex: selectedIndex,
       onDestinationSelected: onTap,
       labelType: NavigationRailLabelType.all,
+      trailing: const Expanded(
+        child: Align(
+          alignment: Alignment.bottomCenter,
+          child: Padding(
+            padding: EdgeInsets.only(bottom: 16),
+            child: SyncStatusIndicator(),
+          ),
+        ),
+      ),
       destinations: [
         for (final d in destinations)
           NavigationRailDestination(

@@ -1,3 +1,5 @@
+import 'dart:convert';
+
 import 'package:drift/drift.dart';
 
 import '../../core/error/failures.dart';
@@ -5,11 +7,13 @@ import '../../domain/entities/product.dart' as entity;
 import '../../domain/repositories/product_repository.dart';
 import '../drift/app_database.dart';
 import '../drift/daos/product_dao.dart';
+import '../drift/daos/sync_queue_dao.dart';
 
 class DriftProductRepository implements ProductRepository {
   final ProductDao _dao;
+  final SyncQueueDao _syncDao;
 
-  DriftProductRepository(this._dao);
+  DriftProductRepository(this._dao, this._syncDao);
 
   @override
   Future<Result<List<entity.Product>>> getProducts({
@@ -42,6 +46,15 @@ class DriftProductRepository implements ProductRepository {
   }) async {
     try {
       await _dao.updateStock(productId, stock);
+
+      // Enqueue for Supabase sync
+      await _syncDao.enqueue(
+        entityTable: 'products',
+        recordId: productId,
+        operation: 'update',
+        payload: jsonEncode({'stock': stock}),
+      );
+
       return const Success(null);
     } catch (e) {
       return Fail(CacheFailure(e.toString()));

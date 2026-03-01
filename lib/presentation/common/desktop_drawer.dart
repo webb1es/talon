@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../../core/constants/app_strings.dart';
+import '../sync/widgets/sync_status_indicator.dart';
 import 'nav_destinations.dart';
 
 class DesktopDrawer extends StatelessWidget {
@@ -26,9 +27,16 @@ class DesktopDrawer extends StatelessWidget {
         children: [
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 24),
-            child: Text(
-              AppStrings.appName,
-              style: theme.textTheme.titleLarge,
+            child: Row(
+              children: [
+                Expanded(
+                  child: Text(
+                    AppStrings.appName,
+                    style: theme.textTheme.titleLarge,
+                  ),
+                ),
+                const SyncStatusIndicator(),
+              ],
             ),
           ),
           const Divider(height: 1),

@@ -13,6 +13,7 @@ import 'data/repositories/drift_store_repository.dart';
 import 'data/sync/sync_engine.dart';
 import 'presentation/auth/bloc/auth_cubit.dart';
 import 'presentation/store/bloc/store_cubit.dart';
+import 'presentation/sync/bloc/sync_cubit.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -45,6 +46,7 @@ class TalonApp extends StatelessWidget {
         BlocProvider(create: (_) => ThemeCubit()),
         BlocProvider.value(value: getIt<AuthCubit>()),
         BlocProvider.value(value: getIt<StoreCubit>()),
+        BlocProvider(create: (_) => SyncCubit(getIt<SyncEngine>())),
       ],
       child: BlocBuilder<ThemeCubit, ThemeState>(
         builder: (context, themeState) {

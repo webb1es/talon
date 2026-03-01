@@ -37,6 +37,9 @@ dependencies:
   # Security
   flutter_secure_storage: ^9.2.4
 
+  # Network
+  connectivity_plus: ^6.1.4
+
   # Utilities
   uuid: ^4.5.1
   intl: ^0.20.2

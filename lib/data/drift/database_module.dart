@@ -2,6 +2,7 @@ import 'package:injectable/injectable.dart';
 import 'package:supabase_flutter/supabase_flutter.dart' as sb;
 
 import '../../core/config/supabase_config.dart';
+import '../../core/services/connectivity_service.dart';
 import '../../domain/repositories/auth_repository.dart';
 import '../../domain/repositories/product_repository.dart';
 import '../../domain/repositories/store_repository.dart';
@@ -26,16 +27,17 @@ abstract class DatabaseModule {
 
   @lazySingleton
   StoreRepository storeRepo(AppDatabase db) =>
-      DriftStoreRepository(db.storeDao);
+      DriftStoreRepository(db.storeDao, db.syncQueueDao);
 
   @lazySingleton
   ProductRepository productRepo(AppDatabase db) =>
-      DriftProductRepository(db.productDao);
+      DriftProductRepository(db.productDao, db.syncQueueDao);
 
   @lazySingleton
   TransactionRepository transactionRepo(AppDatabase db) =>
-      DriftTransactionRepository(db.transactionDao);
+      DriftTransactionRepository(db.transactionDao, db.syncQueueDao);
 
   @lazySingleton
-  SyncEngine syncEngine(AppDatabase db) => SyncEngine(db.syncQueueDao);
+  SyncEngine syncEngine(AppDatabase db, ConnectivityService connectivity) =>
+      SyncEngine(db.syncQueueDao, connectivity);
 }

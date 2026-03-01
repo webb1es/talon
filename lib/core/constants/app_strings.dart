@@ -189,6 +189,13 @@ class AppStrings {
   static const save = 'Save';
   static const sku = 'SKU';
 
+  // Sync
+  static const syncing = 'Syncing...';
+  static const syncComplete = 'All synced';
+  static const syncPending = 'pending';
+  static const syncError = 'Sync failed — tap to retry';
+  static const offline = 'Offline';
+
   // Navigation
   static const pos = 'POS';
   static const inventory = 'Inventory';

@@ -5,6 +5,7 @@ import 'package:flutter/foundation.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 import '../../core/config/supabase_config.dart';
+import '../../core/services/connectivity_service.dart';
 import '../drift/daos/sync_queue_dao.dart';
 
 /// Sync status exposed to the UI.
@@ -14,37 +15,69 @@ enum SyncStatus { idle, syncing, error, offline }
 /// Backs off exponentially on failure. Pauses when offline.
 class SyncEngine extends ChangeNotifier {
   final SyncQueueDao _queueDao;
+  final ConnectivityService _connectivity;
   Timer? _timer;
+  StreamSubscription<bool>? _connectivitySub;
   SyncStatus _status = SyncStatus.idle;
+  int _pendingCount = 0;
   static const _maxRetries = 8;
+  static const _pollInterval = Duration(seconds: 15);
 
-  SyncEngine(this._queueDao);
+  SyncEngine(this._queueDao, this._connectivity);
 
   SyncStatus get status => _status;
+  int get pendingCount => _pendingCount;
   bool get isSyncing => _status == SyncStatus.syncing;
 
   void start() {
-    if (!SupabaseConfig.isConfigured) return;
-    _timer?.cancel();
-    _timer = Timer.periodic(const Duration(seconds: 15), (_) => drain());
+    _connectivitySub?.cancel();
+    _connectivitySub = _connectivity.onConnectivityChanged.listen((online) {
+      if (online) {
+        _setStatus(SyncStatus.idle);
+        drain();
+      } else {
+        _timer?.cancel();
+        _setStatus(SyncStatus.offline);
+      }
+    });
+
+    if (!_connectivity.isOnline) {
+      _setStatus(SyncStatus.offline);
+      _refreshCount();
+      return;
+    }
+
+    _scheduleTimer();
     drain();
   }
 
   void stop() {
     _timer?.cancel();
     _timer = null;
+    _connectivitySub?.cancel();
+    _connectivitySub = null;
   }
 
   /// Process all pending queue items.
   Future<void> drain() async {
     if (!SupabaseConfig.isConfigured) return;
     if (_status == SyncStatus.syncing) return;
+    if (!_connectivity.isOnline) {
+      _setStatus(SyncStatus.offline);
+      return;
+    }
 
-    _status = SyncStatus.syncing;
-    notifyListeners();
+    _setStatus(SyncStatus.syncing);
 
     try {
       final items = await _queueDao.pendingItems();
+      if (items.isEmpty) {
+        _pendingCount = 0;
+        _setStatus(SyncStatus.idle);
+        _scheduleTimer();
+        return;
+      }
+
       final client = Supabase.instance.client;
 
       for (final item in items) {
@@ -74,14 +107,33 @@ class SyncEngine extends ChangeNotifier {
         }
       }
 
-      _status = SyncStatus.idle;
+      await _refreshCount();
+      _setStatus(_pendingCount > 0 ? SyncStatus.error : SyncStatus.idle);
     } catch (e) {
-      _status = SyncStatus.error;
+      await _refreshCount();
+      _setStatus(SyncStatus.error);
     }
+
+    _scheduleTimer();
+  }
+
+  Future<void> _refreshCount() async {
+    _pendingCount = await _queueDao.queueLength();
     notifyListeners();
   }
 
-  Future<int> pendingCount() => _queueDao.queueLength();
+  void _setStatus(SyncStatus s) {
+    if (_status == s) return;
+    _status = s;
+    notifyListeners();
+  }
+
+  void _scheduleTimer() {
+    _timer?.cancel();
+    if (_connectivity.isOnline) {
+      _timer = Timer(_pollInterval, drain);
+    }
+  }
 
   @override
   void dispose() {

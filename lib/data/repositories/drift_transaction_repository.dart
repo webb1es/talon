@@ -1,3 +1,5 @@
+import 'dart:convert';
+
 import 'package:drift/drift.dart';
 
 import '../../core/error/failures.dart';
@@ -6,12 +8,14 @@ import '../../domain/entities/payment_method.dart';
 import '../../domain/entities/transaction.dart' as entity;
 import '../../domain/repositories/transaction_repository.dart';
 import '../drift/app_database.dart';
+import '../drift/daos/sync_queue_dao.dart';
 import '../drift/daos/transaction_dao.dart';
 
 class DriftTransactionRepository implements TransactionRepository {
   final TransactionDao _dao;
+  final SyncQueueDao _syncDao;
 
-  DriftTransactionRepository(this._dao);
+  DriftTransactionRepository(this._dao, this._syncDao);
 
   @override
   Future<Result<entity.Transaction>> createTransaction(
@@ -57,6 +61,63 @@ class DriftTransactionRepository implements TransactionRepository {
           .toList();
 
       await _dao.insertFullTransaction(txnCompanion, itemCompanions, payments: paymentCompanions);
+
+      // Enqueue for Supabase sync
+      await _syncDao.enqueue(
+        entityTable: 'transactions',
+        recordId: txn.id,
+        operation: 'insert',
+        payload: jsonEncode({
+          'id': txn.id,
+          'store_id': txn.storeId,
+          'cashier_id': txn.cashierId,
+          'cashier_name': txn.cashierName,
+          'subtotal': txn.subtotal,
+          'tax_rate': txn.taxRate,
+          'tax_amount': txn.taxAmount,
+          'total': txn.total,
+          'amount_tendered': txn.amountTendered,
+          'change': txn.change,
+          'currency_code': txn.currencyCode,
+          'created_at': txn.createdAt.toIso8601String(),
+        }),
+      );
+
+      // Enqueue each item
+      for (final item in txn.items) {
+        await _syncDao.enqueue(
+          entityTable: 'transaction_items',
+          recordId: '${txn.id}_${item.productId}',
+          operation: 'insert',
+          payload: jsonEncode({
+            'transaction_id': txn.id,
+            'product_id': item.productId,
+            'product_name': item.productName,
+            'sku': item.sku,
+            'unit_price': item.unitPrice,
+            'quantity': item.quantity,
+            'line_total': item.lineTotal,
+          }),
+        );
+      }
+
+      // Enqueue each payment entry
+      for (final p in txn.payments) {
+        await _syncDao.enqueue(
+          entityTable: 'payment_entries',
+          recordId: '${txn.id}_${p.method.name}_${p.currencyCode}',
+          operation: 'insert',
+          payload: jsonEncode({
+            'transaction_id': txn.id,
+            'method': p.method.name,
+            'currency_code': p.currencyCode,
+            'amount': p.amount,
+            'amount_in_base_currency': p.amountInBaseCurrency,
+            'exchange_rate': p.exchangeRate,
+          }),
+        );
+      }
+
       return Success(txn);
     } catch (e) {
       return Fail(CacheFailure(e.toString()));
